@@ -69,7 +69,7 @@ conn.close()
 # --- Garantir coluna de mês ---
 if 'Data' in df.columns:
     df['Data'] = pd.to_datetime(df['Data'])
-    df['MesAno'] = df['Data'].dt.to_period("M").astype(str)
+    df['Mês/Ano'] = df['Data'].dt.to_period("M").astype(str)
 else:
     st.stop()  # sem data não rola comparação
 
@@ -93,7 +93,7 @@ if col_metrica2 != "Nenhuma":
     resumo[col_metrica2] = df_filtrado.groupby("MesAno").agg({col_metrica2: "sum"}).values
 
 # --- Calcula variação mês a mês da primeira métrica ---
-resumo['Delta_%_' + col_metrica1] = resumo[col_metrica1].pct_change() * 100
+resumo['Variação em %' + col_metrica1] = resumo[col_metrica1].pct_change() * 100
 
 # --- Mostra resultados ---
 st.subheader(f"Comparativo de métricas para {val_filtro} ({col_filtro})")
