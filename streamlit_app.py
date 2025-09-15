@@ -59,15 +59,5 @@ df = pd.read_sql("SELECT * FROM relatorios", conn)
 conn.close()
 
 # --- EXPLORAÇÃO BÁSICA ---
-st.subheader("👀 Preview do banco")
-st.dataframe(df.head())  # mostra as primeiras linhas
-
 st.subheader("📊 Estatísticas básicas")
 st.write(df.describe())  # estatísticas básicas das colunas numéricas
-
-# --- FILTRAR VIAGENS ACIMA DE 8 HORAS ---
-if 'Horas Operação' in df.columns:
-    st.subheader("🚛 Viagens acima de 8 horas")
-    viagens_longas = df[df['Horas Operação'] > 8]
-    st.write(f"Total de viagens acima de 8h: {viagens_longas.shape[0]}")
-    st.dataframe(viagens_longas)
