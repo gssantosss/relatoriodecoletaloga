@@ -42,22 +42,33 @@ if table_exists:
     st.dataframe(df_banco)
 else:
     st.info("Nenhum relatório foi carregado ainda.")
-    
-conn.close()
 
-import streamlit as st
-import pandas as pd
-import sqlite3
 
-# Função para conectar no banco
-def get_connection():
-    return sqlite3.connect("relatorios.db")
+# --- Garantir coluna de mês ---
+if 'Data' in df.columns:
+    df['Data'] = pd.to_datetime(df['Data'])
+    df['MesAno'] = df['Data'].dt.to_period("M").astype(str)
+else:
+    st.stop()  # sem data não rola comparação
 
-# Conecta e puxa todos os dados
-conn = get_connection()
-df = pd.read_sql("SELECT * FROM relatorios", conn)
-conn.close()
+# --- Escolha do usuário ---
+col_filtro = st.selectbox("Escolha a coluna para filtrar:", [c for c in df.columns if c not in ["Data", "MesAno"]])
+val_filtro = st.selectbox(f"Escolha o valor de {col_filtro}:", df[col_filtro].unique())
 
-# --- EXPLORAÇÃO BÁSICA ---
-st.subheader("📊 Estatísticas básicas")
-st.write(df.describe())  # estatísticas básicas das colunas numéricas
+col_metrica = st.selectbox("Escolha a métrica para comparar:", ["KM_Planejado", "Horas_Operacao"])
+
+# --- Filtra o DataFrame ---
+df_filtrado = df[df[col_filtro] == val_filtro]
+
+# --- Agrupa por mês ---
+resumo = df_filtrado.groupby("MesAno").agg({col_metrica: "sum"}).reset_index()
+
+# --- Calcula variação mês a mês ---
+resumo['Delta_%'] = resumo[col_metrica].pct_change() * 100
+
+# --- Mostra resultados ---
+st.subheader(f"📊 Comparativo de {col_metrica} para {val_filtro} ({col_filtro})")
+st.dataframe(resumo)
+
+# --- Dica visual extra ---
+st.line_chart(resumo.set_index("MesAno")[[col_metrica]])
