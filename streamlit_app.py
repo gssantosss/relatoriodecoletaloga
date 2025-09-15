@@ -66,12 +66,8 @@ st.subheader("📊 Estatísticas básicas")
 st.write(df.describe())  # estatísticas básicas das colunas numéricas
 
 # --- FILTRAR VIAGENS ACIMA DE 8 HORAS ---
-if 'Horas_Operacao' in df.columns:
+if 'Horas Operação' in df.columns:
     st.subheader("🚛 Viagens acima de 8 horas")
-    viagens_longas = df[df['Horas_Operacao'] > 8]
+    viagens_longas = df[df['Horas Operação'] > 8]
     st.write(f"Total de viagens acima de 8h: {viagens_longas.shape[0]}")
     st.dataframe(viagens_longas)
-else:
-    st.warning("⚠️ Coluna 'Horas_Operacao' não encontrada no banco!")
-
-
