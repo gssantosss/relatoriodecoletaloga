@@ -79,20 +79,25 @@ val_filtro = st.selectbox(f"Escolha o valor de {col_filtro}:", df[col_filtro].dr
 
 # --- Usuário escolhe a MÉTRICA (apenas colunas numéricas) ---
 colunas_numericas = df.select_dtypes(include="number").columns.tolist()
-col_metrica = st.selectbox("Escolha a métrica para somar:", colunas_numericas)
+col_metrica1 = st.selectbox("Escolha a primeira métrica:", colunas_numericas, index=0)
+
+# Aqui você adiciona a segunda métrica
+col_metrica2 = st.selectbox("Escolha a segunda métrica (opcional):", ["Nenhuma"] + colunas_numericas, index=0)
 
 # --- Filtra o DataFrame ---
 df_filtrado = df[df[col_filtro] == val_filtro]
 
 # --- Agrupa por mês e soma ---
-resumo = df_filtrado.groupby("MesAno").agg({col_metrica: "sum"}).reset_index()
+resumo = df_filtrado.groupby("MesAno").agg({col_metrica1: "sum"}).reset_index()
+if col_metrica2 != "Nenhuma":
+    resumo[col_metrica2] = df_filtrado.groupby("MesAno").agg({col_metrica2: "sum"}).values
 
-# --- Calcula variação mês a mês ---
-resumo['Delta_%'] = resumo[col_metrica].pct_change() * 100
+# --- Calcula variação mês a mês da primeira métrica ---
+resumo['Delta_%_' + col_metrica1] = resumo[col_metrica1].pct_change() * 100
 
 # --- Mostra resultados ---
-st.subheader(f"📊 Comparativo de {col_metrica} para {val_filtro} ({col_filtro})")
+st.subheader(f"Comparativo de métricas para {val_filtro} ({col_filtro})")
 st.dataframe(resumo)
 
 # --- Visual bonitinho ---
-st.line_chart(resumo.set_index("MesAno")[[col_metrica]])
+st.line_chart(resumo.set_index("MesAno")[[col_metrica1] + ([col_metrica2] if col_metrica2 != "Nenhuma" else [])])
