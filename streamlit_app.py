@@ -65,16 +65,18 @@ if 'Data' in df.columns:
 else:
     st.stop()  # sem data não rola comparação
 
-# --- Escolha do usuário ---
+# --- Usuário escolhe a coluna para FILTRAR (texto/categórica) ---
 col_filtro = st.selectbox("Escolha a coluna para filtrar:", [c for c in df.columns if c not in ["Data", "MesAno"]])
-val_filtro = st.selectbox(f"Escolha o valor de {col_filtro}:", df[col_filtro].unique())
+val_filtro = st.selectbox(f"Escolha o valor de {col_filtro}:", df[col_filtro].dropna().unique())
 
-col_metrica = st.selectbox("Escolha a métrica para comparar:", ["KM_Planejado", "Horas_Operacao"])
+# --- Usuário escolhe a MÉTRICA (apenas colunas numéricas) ---
+colunas_numericas = df.select_dtypes(include="number").columns.tolist()
+col_metrica = st.selectbox("Escolha a métrica para somar:", colunas_numericas)
 
 # --- Filtra o DataFrame ---
 df_filtrado = df[df[col_filtro] == val_filtro]
 
-# --- Agrupa por mês ---
+# --- Agrupa por mês e soma ---
 resumo = df_filtrado.groupby("MesAno").agg({col_metrica: "sum"}).reset_index()
 
 # --- Calcula variação mês a mês ---
@@ -84,5 +86,5 @@ resumo['Delta_%'] = resumo[col_metrica].pct_change() * 100
 st.subheader(f"📊 Comparativo de {col_metrica} para {val_filtro} ({col_filtro})")
 st.dataframe(resumo)
 
-# --- Dica visual extra ---
+# --- Visual bonitinho ---
 st.line_chart(resumo.set_index("MesAno")[[col_metrica]])
