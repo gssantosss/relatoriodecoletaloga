@@ -74,8 +74,8 @@ else:
     st.stop()  # sem data não rola comparação
 
 # --- Usuário escolhe a coluna para FILTRAR (texto/categórica) ---
-col_filtro = st.selectbox("Escolha a coluna para filtrar:", [c for c in df.columns if c not in ["Data", "MesAno"]])
-val_filtro = st.selectbox(f"Escolha o valor de {col_filtro}:", df[col_filtro].dropna().unique())
+col_filtro = st.selectbox("Escolha a coluna para o filtro:", [c for c in df.columns if c not in ["Data", "MesAno"]])
+val_filtro = st.selectbox(f"Escolha o valor em {col_filtro} (Coluna escolhida):", df[col_filtro].dropna().unique())
 
 # --- Usuário escolhe a MÉTRICA (apenas colunas numéricas) ---
 colunas_numericas = df.select_dtypes(include="number").columns.tolist()
