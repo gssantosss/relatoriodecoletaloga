@@ -45,3 +45,33 @@ else:
     
 conn.close()
 
+import streamlit as st
+import pandas as pd
+import sqlite3
+
+# Função para conectar no banco
+def get_connection():
+    return sqlite3.connect("relatorios.db")
+
+# Conecta e puxa todos os dados
+conn = get_connection()
+df = pd.read_sql("SELECT * FROM relatorios", conn)
+conn.close()
+
+# --- EXPLORAÇÃO BÁSICA ---
+st.subheader("👀 Preview do banco")
+st.dataframe(df.head())  # mostra as primeiras linhas
+
+st.subheader("📊 Estatísticas básicas")
+st.write(df.describe())  # estatísticas básicas das colunas numéricas
+
+# --- FILTRAR VIAGENS ACIMA DE 8 HORAS ---
+if 'Horas_Operacao' in df.columns:
+    st.subheader("🚛 Viagens acima de 8 horas")
+    viagens_longas = df[df['Horas_Operacao'] > 8]
+    st.write(f"Total de viagens acima de 8h: {viagens_longas.shape[0]}")
+    st.dataframe(viagens_longas)
+else:
+    st.warning("⚠️ Coluna 'Horas_Operacao' não encontrada no banco!")
+
+
