@@ -44,6 +44,20 @@ else:
     st.info("Nenhum relatório foi carregado ainda.")
 
 
+
+import pandas as pd
+import streamlit as st
+import sqlite3
+
+# Conexão
+def get_connection():
+    return sqlite3.connect("relatorios.db")
+
+# Lê o banco
+conn = get_connection()
+df = pd.read_sql("SELECT * FROM relatorios", conn)
+conn.close()
+
 # --- Garantir coluna de mês ---
 if 'Data' in df.columns:
     df['Data'] = pd.to_datetime(df['Data'])
