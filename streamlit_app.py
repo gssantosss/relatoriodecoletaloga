@@ -31,7 +31,17 @@ if uploaded_file is not None:
 st.subheader("📂 Relatórios já armazenados")
 
 conn = get_connection()
-df_banco = pd.read_sql("SELECT * FROM relatorios", conn)
+cursor = conn.cursor()
+
+# Verifica se a tabela já existe
+cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='relatorios'")
+table_exists = cursor.fetchone()
+
+if table_exists:
+    df_banco = pd.read_sql("SELECT * FROM relatorios", conn)
+    st.dataframe(df_banco)
+else:
+    st.info("Nenhum relatório foi carregado ainda.")
+    
 conn.close()
 
-st.dataframe(df_banco)
