@@ -1,10 +1,13 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
+import os
 
-# --- Função pra conectar no banco ---
+# --- Banco temporário no Streamlit Cloud ---
+DB_PATH = "/tmp/relatorios.db"
+
 def get_connection():
-    return sqlite3.connect("relatorios.db")
+    return sqlite3.connect(DB_PATH)
 
 # --- Título do app ---
 st.title("📊 Relatórios de Coleta")
@@ -19,7 +22,7 @@ if uploaded_file is not None:
     # Normalizar colunas
     df.columns = df.columns.str.strip().str.replace(" ", "_")
 
-    # Converter coluna Data para string compatível com SQLite
+    # Converter coluna Data para string compatível SQLite
     if 'Data' in df.columns:
         df['Data'] = pd.to_datetime(df['Data'])
         df['Data'] = df['Data'].dt.strftime('%Y-%m-%d')
@@ -33,7 +36,7 @@ if uploaded_file is not None:
     df.to_sql("relatorios", conn, if_exists="append", index=False)
     conn.close()
 
-    st.success("Relatório salvo no banco com sucesso ✅")
+    st.success("Relatório salvo no banco temporário ✅")
 
 # --- Mostrar dados do banco ---
 st.subheader("📂 Relatórios já armazenados")
