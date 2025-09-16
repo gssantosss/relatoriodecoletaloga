@@ -16,8 +16,13 @@ if uploaded_file is not None:
     # Ler o Excel
     df = pd.read_excel(uploaded_file)
 
-    # Normalizar colunas (tirar espaços/acentos se precisar)
+    # Normalizar colunas
     df.columns = df.columns.str.strip().str.replace(" ", "_")
+
+    # Converter coluna Data para string compatível com SQLite
+    if 'Data' in df.columns:
+        df['Data'] = pd.to_datetime(df['Data'])
+        df['Data'] = df['Data'].dt.strftime('%Y-%m-%d')
 
     # Mostrar preview
     st.write("Pré-visualização do arquivo:")
