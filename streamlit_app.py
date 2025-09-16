@@ -2,86 +2,84 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 
-# --- Conexão com SQLite ---
+# Função pra conectar no banco
 def get_connection():
     return sqlite3.connect("relatorios.db")
 
+# Título do app
 st.title("📊 Relatórios de Coleta")
 
-# --- Upload de Excel ---
+# Upload do arquivo
 uploaded_file = st.file_uploader("Suba o relatório em Excel", type=["xlsx"])
 
-if uploaded_file:
+if uploaded_file is not None:
+    # Ler o excel
     df = pd.read_excel(uploaded_file)
-    
-    # --- Padronização ---
-    if 'Data' in df.columns:
-        df['Data'] = pd.to_datetime(df['Data'], errors='coerce')
-    df = df.where(pd.notnull(df), None)  # substitui NaN por None
-    
-    # --- Salvar no banco ---
-    conn = get_connection()
-    try:
-        df.to_sql("relatorios", conn, if_exists="append", index=False)
-        st.success("Relatório salvo no banco com sucesso ✅")
-    except Exception as e:
-        st.error(f"Erro ao salvar no banco: {e}")
-    finally:
-        conn.close()
-    
+
+    # Mostrar preview
     st.write("Pré-visualização do arquivo:")
     st.dataframe(df.head())
 
-# --- Ler dados do banco com segurança ---
+    # Salvar no banco
+    conn = get_connection()
+    df.to_sql("relatorios", conn, if_exists="append", index=False)
+    conn.close()
+
+    st.success("Relatório salvo no banco com sucesso ✅")
+
+# Mostrar dados do banco
+st.subheader("📂 Relatórios já armazenados")
+
 conn = get_connection()
 cursor = conn.cursor()
+
+# Verifica se a tabela já existe
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='relatorios'")
-if cursor.fetchone():
-    df = pd.read_sql("SELECT * FROM relatorios", conn)
+table_exists = cursor.fetchone()
+
+if table_exists:
+    df_banco = pd.read_sql("SELECT * FROM relatorios", conn)
+    st.dataframe(df_banco)
 else:
-    df = pd.DataFrame()
+    st.info("Nenhum relatório foi carregado ainda.")
+
+# Conexão para análise
+conn = get_connection()
+df = pd.read_sql("SELECT * FROM relatorios", conn)
 conn.close()
 
-if df.empty:
-    st.info("Nenhum relatório carregado ainda.")
-    st.stop()
-
 # --- Garantir coluna de mês ---
-if 'Data' not in df.columns:
-    st.error("Coluna 'Data' não encontrada no banco.")
-    st.stop()
-df['Data'] = pd.to_datetime(df['Data'], errors='coerce')
-df['MesAno'] = df['Data'].dt.to_period("M").astype(str)
+if 'Data' in df.columns:
+    df['Data'] = pd.to_datetime(df['Data'])
+    df['MesAno'] = df['Data'].dt.to_period("M").astype(str)
+else:
+    st.stop()  # sem data não rola comparação
 
-# --- Seleção de filtros ---
-col_filtro = st.selectbox("Escolha a coluna para filtro:", [c for c in df.columns if c not in ["Data", "MesAno"]])
-val_filtro = st.selectbox(f"Escolha o valor em {col_filtro}:", df[col_filtro].dropna().unique())
+# --- Usuário escolhe a coluna para FILTRAR (texto/categórica) ---
+col_filtro = st.selectbox("Escolha a coluna para o filtro:", [c for c in df.columns if c not in ["Data", "MesAno"]])
+val_filtro = st.selectbox(f"Escolha o valor em {col_filtro} (Coluna escolhida):", df[col_filtro].dropna().unique())
 
+# --- Usuário escolhe a MÉTRICA (apenas colunas numéricas) ---
 colunas_numericas = df.select_dtypes(include="number").columns.tolist()
-if not colunas_numericas:
-    st.error("Não há colunas numéricas para métricas.")
-    st.stop()
+col_metrica1 = st.selectbox("Escolha a primeira métrica:", colunas_numericas, index=0)
 
-col_metrica1 = st.selectbox("Escolha a primeira métrica:", colunas_numericas)
-col_metrica2 = st.selectbox("Escolha a segunda métrica (opcional):", ["Nenhuma"] + colunas_numericas)
+# Aqui você adiciona a segunda métrica
+col_metrica2 = st.selectbox("Escolha a segunda métrica (opcional):", ["Nenhuma"] + colunas_numericas, index=0)
 
-# --- Filtrar DataFrame ---
+# --- Filtra o DataFrame ---
 df_filtrado = df[df[col_filtro] == val_filtro]
 
-# --- Agrupar por mês ---
+# --- Agrupa por mês e soma ---
 resumo = df_filtrado.groupby("MesAno").agg({col_metrica1: "sum"}).reset_index()
-
 if col_metrica2 != "Nenhuma":
-    resumo2 = df_filtrado.groupby("MesAno").agg({col_metrica2: "sum"}).reset_index()
-    resumo = resumo.merge(resumo2, on="MesAno")
+    resumo[col_metrica2] = df_filtrado.groupby("MesAno").agg({col_metrica2: "sum"}).values
 
-# --- Delta percentual ---
-resumo['Delta_%_' + col_metrica1] = resumo[col_metrica1].pct_change().fillna(0) * 100
+# --- Calcula variação mês a mês da primeira métrica ---
+resumo['Delta_%_' + col_metrica1] = resumo[col_metrica1].pct_change() * 100
 
-# --- Mostrar resultados ---
+# --- Mostra resultados ---
 st.subheader(f"Comparativo de métricas para {val_filtro} ({col_filtro})")
 st.dataframe(resumo)
 
-# --- Gráfico simples ---
-cols_grafico = [col_metrica1] + ([col_metrica2] if col_metrica2 != "Nenhuma" else [])
-st.line_chart(resumo.set_index("MesAno")[cols_grafico])
+# --- Visual bonitinho ---
+st.line_chart(resumo.set_index("MesAno")[[col_metrica1] + ([col_metrica2] if col_metrica2 != "Nenhuma" else [])])
