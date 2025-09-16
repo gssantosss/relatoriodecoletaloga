@@ -6,6 +6,14 @@ import sqlite3
 def get_connection():
     return sqlite3.connect("relatorios.db")
 
+import streamlit as st
+import pandas as pd
+import sqlite3
+
+# Função pra conectar no banco
+def get_connection():
+    return sqlite3.connect("relatorios.db")
+
 # Título do app
 st.title("📊 Relatórios de Coleta")
 
@@ -43,7 +51,15 @@ if table_exists:
 else:
     st.info("Nenhum relatório foi carregado ainda.")
 
-# Conexão para análise
+import pandas as pd
+import streamlit as st
+import sqlite3
+
+# Conexão
+def get_connection():
+    return sqlite3.connect("relatorios.db")
+
+# Lê o banco
 conn = get_connection()
 df = pd.read_sql("SELECT * FROM relatorios", conn)
 conn.close()
