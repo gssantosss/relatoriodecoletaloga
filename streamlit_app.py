@@ -175,7 +175,8 @@ if table_exists:
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📊 Visão Geral", "🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"
     ])
-
+    
+#📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊📊
     with tab1:
         st.subheader("Análise Geral")
     
@@ -269,6 +270,8 @@ if table_exists:
         st.subheader("Análise de Veículos")
         st.dataframe(df_filtered)
 
+    
+   #📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐📐 
     with tab4:
         st.subheader("Análise de Quilometragem")
     
@@ -289,6 +292,7 @@ if table_exists:
         # Gráfico de pizza
         fig_pizza = px.pie(
             dados_pizza,
+            names="Tipo de Percurso",
             values="Distância Total",
             title="🚗 Proporção de Percursos",
             hole=0.6
