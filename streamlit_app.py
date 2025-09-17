@@ -66,7 +66,6 @@ if uploaded_file is not None:
 # Mostrar dados já no banco
 # =========================
 st.subheader("📂 Preview do Relatório")
-
 conn = get_connection()
 cursor = conn.cursor()
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='relatorios'")
@@ -79,32 +78,43 @@ if table_exists:
     # Garantir que Data é datetime
     if "data" in df_banco.columns:
         df_banco["data"] = pd.to_datetime(df_banco["data"], errors="coerce", dayfirst=True)
+        df_banco = df_banco[df_banco["data"].notna()]
         df_banco["ano"] = df_banco["data"].dt.year
         df_banco["mesano"] = df_banco["data"].dt.strftime("%m/%Y")
+        # Coluna auxiliar para ordenação cronológica
+        df_banco["mesano_dt"] = pd.to_datetime(df_banco["mesano"], format="%m/%Y", errors="coerce")
 
     st.dataframe(df_banco.head())
 
     # =========================
     # Filtros globais unificados
     # =========================
-    # Opções para filtros
-    f_sub = df_banco["subprefeitura"].dropna().unique() if "subprefeitura" in df_banco.columns else []
-    f_unidade = df_banco["unidade"].dropna().unique() if "unidade" in df_banco.columns else []
-    f_tipo = df_banco["tipo_operacao"].dropna().unique() if "tipo_operacao" in df_banco.columns else []
-    f_turno = df_banco["turno"].dropna().unique() if "turno" in df_banco.columns else []
+    st.sidebar.header("Filtros de Pesquisa")
 
-    # Multiselect na sidebar
-    f_sub = st.sidebar.multiselect("Subprefeitura", f_sub)
-    f_unidade = st.sidebar.multiselect("Unidade", f_unidade)
-    f_tipo = st.sidebar.multiselect("Tipo de Operação", f_tipo)
-    f_turno = st.sidebar.multiselect("Turno", f_turno)
+    # Filtros simples
+    f_sub = st.sidebar.multiselect(
+        "Subprefeitura",
+        df_banco["subprefeitura"].dropna().unique() if "subprefeitura" in df_banco.columns else []
+    )
+    f_unidade = st.sidebar.multiselect(
+        "Unidade",
+        df_banco["unidade"].dropna().unique() if "unidade" in df_banco.columns else []
+    )
+    f_tipo = st.sidebar.multiselect(
+        "Tipo de Operação",
+        df_banco["tipo_operacao"].dropna().unique() if "tipo_operacao" in df_banco.columns else []
+    )
+    f_turno = st.sidebar.multiselect(
+        "Turno",
+        df_banco["turno"].dropna().unique() if "turno" in df_banco.columns else []
+    )
 
     # Granularidade
     granularidade = st.sidebar.radio("Filtrar por:", ["Mês/Ano", "Período de Dias"])
     if granularidade == "Mês/Ano":
         f_mesano = st.sidebar.multiselect(
             "Mês/Ano",
-            sorted(df_banco["mesano"].unique())
+            df_banco.dropna(subset=["mesano_dt"]).sort_values("mesano_dt")["mesano"].unique()
         )
         f_periodo = None
     else:
@@ -123,6 +133,7 @@ if table_exists:
     # Aplicar filtros
     # =========================
     df_filtered = df_banco.copy()
+
     if f_sub:
         df_filtered = df_filtered[df_filtered["subprefeitura"].isin(f_sub)]
     if f_unidade:
@@ -147,14 +158,14 @@ if table_exists:
 
     with tab1:
         st.subheader("Análise Geral")
-        # Coloque aqui seus KPIs e gráficos de visão geral
 
+        # Garantir que as colunas numéricas estão no formato certo
         if "total_de_kms" in df_filtered.columns:
             df_filtered["total_de_kms"] = pd.to_numeric(df_filtered["total_de_kms"], errors="coerce")
         if "%_realizado" in df_filtered.columns:
             df_filtered["%_realizado"] = pd.to_numeric(df_filtered["%_realizado"], errors="coerce")
 
-        # Conversão da coluna de horas
+        # Conversão da coluna de horas se existir
         if "horas_operacao" in df_filtered.columns:
             def parse_horas(x):
                 if pd.isna(x):
@@ -203,7 +214,7 @@ if table_exists:
             )
             st.plotly_chart(fig_km, use_container_width=True)
 
-        # Evolução do % realizado
+        # Gráfico da evolução do % realizado ao longo do tempo
         if "mesano" in df_filtered.columns and "%_realizado" in df_filtered.columns:
             evolucao = df_filtered.groupby("mesano")["%_realizado"].mean().reset_index()
             fig_realizado = px.line(
