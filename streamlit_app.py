@@ -93,11 +93,8 @@ if table_exists:
 # =========================
 # Filtros globais unificados
 # =========================
-if table_exists:
-    df_banco = pd.read_sql("SELECT * FROM relatorios", conn)
-    df_banco = padronizar_colunas(df_banco)
 
-    # Filtrar apenas linhas com datas válidas
+# Filtrar apenas linhas com datas válidas
 if "data" in df_banco.columns:
     df_banco["data"] = pd.to_datetime(df_banco["data"], dayfirst=True, errors="coerce")
     df_banco = df_banco[df_banco["data"].notna()]  # remove datas inválidas
