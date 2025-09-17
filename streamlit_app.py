@@ -123,7 +123,7 @@ if table_exists:
     tab1, tab2, tab3, tab4, tab5= st.tabs(["📊 Visão Geral","🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"])
 
     with tab1:
-    st.subheader("📊 Visão Geral")
+        st.subheader("📊 Visão Geral")
 
         if not df_filtered.empty:
     
