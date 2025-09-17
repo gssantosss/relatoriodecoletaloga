@@ -118,14 +118,24 @@ if table_exists:
         )
         f_periodo = None
     else:
+        # Garantir que a coluna 'data' está no formato correto e sem datas futuras
+        df_banco["data"] = pd.to_datetime(df_banco["data"], errors="coerce", dayfirst=True)
+        df_banco = df_banco[df_banco["data"].notna()]
+        df_banco = df_banco[df_banco["data"] <= pd.Timestamp.today()]
+        
+        # Definir limites reais com base nos dados válidos
         min_date = df_banco["data"].min()
         max_date = df_banco["data"].max()
+        
+        # Filtro de período com limites reais
         f_periodo = st.sidebar.date_input(
             "Período (dd/mm/aaaa)",
             [min_date, max_date],
             min_value=min_date,
             max_value=max_date,
             format="DD/MM/YYYY"
+        )
+
         )
         f_mesano = None
 
