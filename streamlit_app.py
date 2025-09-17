@@ -158,13 +158,13 @@ if table_exists:
 
     with tab1:
         st.subheader("Análise Geral")
-
+    
         # Garantir que as colunas numéricas estão no formato certo
         if "total_de_kms" in df_filtered.columns:
             df_filtered["total_de_kms"] = pd.to_numeric(df_filtered["total_de_kms"], errors="coerce")
         if "%_realizado" in df_filtered.columns:
             df_filtered["%_realizado"] = pd.to_numeric(df_filtered["%_realizado"], errors="coerce")
-
+    
         # Conversão da coluna de horas se existir
         if "horas_operacao" in df_filtered.columns:
             def parse_horas(x):
@@ -180,17 +180,17 @@ if table_exists:
                 except:
                     return 0
             df_filtered["horas_operacao_num"] = df_filtered["horas_operacao"].apply(parse_horas)
-
+    
         # KPIs
         total_km = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
         media_realizado = df_filtered["%_realizado"].mean() if "%_realizado" in df_filtered.columns else 0
         total_horas = df_filtered["horas_operacao_num"].sum() if "horas_operacao_num" in df_filtered.columns else 0
-
+    
         col1, col2, col3 = st.columns(3)
         col1.metric("Total de KM", f"{total_km:,.0f} km")
         col2.metric("% Médio Realizado", f"{media_realizado:.1f}%")
         col3.metric("Total de Horas", f"{total_horas:.1f} h")
-
+    
         # Gráfico de KM por subprefeitura
         if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
             km_por_sub = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().reset_index()
@@ -203,9 +203,9 @@ if table_exists:
                 title="🚛 Quilometragem por Subprefeitura"
             )
             fig_km.update_traces(
-                texttemplate='%{text:.0f}',
+                texttemplate='%{text:.0f} km',
                 textposition='outside',
-                hovertemplate="<b>%{y}</b><br>KMs: %{x:,}"
+                hovertemplate="<b>%{y}</b><br>Total de KM: %{x:,} km"
             )
             fig_km.update_layout(
                 xaxis_title="Total de KM",
@@ -213,20 +213,22 @@ if table_exists:
                 showlegend=False
             )
             st.plotly_chart(fig_km, use_container_width=True)
-
+    
         # Gráfico da evolução do % realizado ao longo do tempo
         if "mesano" in df_filtered.columns and "%_realizado" in df_filtered.columns:
+            df_filtered = df_filtered[df_filtered["mesano_dt"] <= pd.Timestamp.today()]
             evolucao = df_filtered.groupby("mesano")["%_realizado"].mean().reset_index()
             fig_realizado = px.line(
                 evolucao,
                 x="mesano",
                 y="%_realizado",
                 markers=True,
+                text=evolucao["%_realizado"].round(1),
                 title="📈 Evolução do % Realizado"
             )
             fig_realizado.update_traces(
-                text=evolucao["%_realizado"].round(1),
-                textposition="top center"
+                textposition="top center",
+                hovertemplate="<b>%{x}</b><br>% Realizado: %{y:.1f}%"
             )
             fig_realizado.update_layout(
                 xaxis_title="Mês/Ano",
@@ -234,6 +236,7 @@ if table_exists:
                 hovermode="x unified"
             )
             st.plotly_chart(fig_realizado, use_container_width=True)
+
 
     with tab2:
         st.subheader("Análise de Setores")
