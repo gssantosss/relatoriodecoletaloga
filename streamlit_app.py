@@ -95,25 +95,45 @@ if table_exists:
     f_unidade = st.sidebar.multiselect("Unidade", df_banco["unidade"].dropna().unique() if "unidade" in df_banco.columns else [])
     f_tipo = st.sidebar.multiselect("Tipo de Operação", df_banco["tipo_operacao"].dropna().unique() if "tipo_operacao" in df_banco.columns else [])
     f_turno = st.sidebar.multiselect("Turno", df_banco["turno"].dropna().unique() if "turno" in df_banco.columns else [])
-
+    
     # Filtro de Mês/Ano (formato BR)
     f_mesano = st.sidebar.multiselect("Mês/Ano", df_banco["mesano"].dropna().unique() if "mesano" in df_banco.columns else [])
+    
+    # Filtro de período (datas dd/mm/aaaa)
+    if "data" in df_banco.columns:
+        df_banco["data"] = pd.to_datetime(df_banco["data"], dayfirst=True, errors="coerce")
+        min_date = df_banco["data"].min()
+        max_date = df_banco["data"].max()
+    
+        f_periodo = st.sidebar.date_input(
+            "Período (Dia/Mês/Ano)",
+            [min_date, max_date],
+            min_value=min_date,
+            max_value=max_date,
+            format="DD/MM/YYYY"
+        )
+    else:
+        f_periodo = None
 
-    # =========================
-    # Aplicar filtros
-    # =========================
-    df_filtered = df_banco.copy()
+# =========================
+# Aplicar filtros
+# =========================
+df_filtered = df_banco.copy()
 
-    if f_sub:
-        df_filtered = df_filtered[df_filtered["subprefeitura"].isin(f_sub)]
-    if f_unidade:
-        df_filtered = df_filtered[df_filtered["unidade"].isin(f_unidade)]
-    if f_tipo:
-        df_filtered = df_filtered[df_filtered["tipo_operacao"].isin(f_tipo)]
-    if f_turno:
-        df_filtered = df_filtered[df_filtered["turno"].isin(f_turno)]
-    if f_mesano:
-        df_filtered = df_filtered[df_filtered["mesano"].isin(f_mesano)]
+if f_sub:
+    df_filtered = df_filtered[df_filtered["subprefeitura"].isin(f_sub)]
+if f_unidade:
+    df_filtered = df_filtered[df_filtered["unidade"].isin(f_unidade)]
+if f_tipo:
+    df_filtered = df_filtered[df_filtered["tipo_operacao"].isin(f_tipo)]
+if f_turno:
+    df_filtered = df_filtered[df_filtered["turno"].isin(f_turno)]
+if f_mesano:
+    df_filtered = df_filtered[df_filtered["mesano"].isin(f_mesano)]
+if f_periodo and len(f_periodo) == 2:
+    start_date, end_date = f_periodo
+    df_filtered = df_filtered[(df_filtered["data"] >= pd.to_datetime(start_date)) & (df_filtered["data"] <= pd.to_datetime(end_date))]
+
 
 
 
@@ -194,14 +214,20 @@ if table_exists:
                 markers=True,
                 title="📈 Evolução do % Realizado"
             )
+            # Adicionar rótulo de dados
+            fig_realizado.update_traces(
+                text=evolucao["%_realizado"].round(1),
+                textposition="top center"
+            )
+        
             fig_realizado.update_layout(
-                xaxis_title="mesano",
+                xaxis_title="Mês/Ano",
                 yaxis_title="% Realizado",
                 hovermode="x unified"
             )
             st.plotly_chart(fig_realizado, use_container_width=True)
-
-
+        
+        
 
 
 
