@@ -124,14 +124,38 @@ if table_exists:
 
     with tab1:
         st.subheader("📊 Visão Geral")
-
+    
         if not df_filtered.empty:
+    
+            # -------------------------
+            # Normalizar coluna de horas
+            # -------------------------
+            def horas_para_decimal(hora_str):
+                """
+                Converte '9h 10m' ou número em horas decimais.
+                """
+                if pd.isna(hora_str):
+                    return 0
+                if isinstance(hora_str, (int, float)):
+                    return hora_str
+                partes = hora_str.split("h")
+                try:
+                    horas = int(partes[0].strip())
+                    minutos = int(partes[1].replace("m", "").strip()) if len(partes) > 1 else 0
+                    return horas + minutos / 60
+                except:
+                    return 0
+    
+            if "horas_operacao" in df_filtered.columns:
+                df_filtered["horas_operacao_decimal"] = df_filtered["horas_operacao"].apply(horas_para_decimal)
+            else:
+                df_filtered["horas_operacao_decimal"] = 0
     
             # -------------------------
             # Cards principais
             # -------------------------
             total_km = df_filtered["km"].sum() if "km" in df_filtered.columns else 0
-            total_horas = df_filtered["horas_operacao"].sum() if "horas_operacao" in df_filtered.columns else 0
+            total_horas = df_filtered["horas_operacao_decimal"].sum()
             percent_realizado = int(df_filtered["percent_realizado"].mean()) if "percent_realizado" in df_filtered.columns else 0
     
             # Top setor por KM
@@ -143,7 +167,7 @@ if table_exists:
             col1, col2, col3, col4 = st.columns(4)
             col1.metric("📈 % Realizado", f"{percent_realizado}%")
             col2.metric("🛣 Total KM", f"{total_km} km")
-            col3.metric("⏱ Total Horas", f"{total_horas} h")
+            col3.metric("⏱ Total Horas", f"{round(total_horas,1)} h")
             col4.metric("🏆 Setor com maior KM", top_setor_km)
     
             # -------------------------
@@ -173,6 +197,7 @@ if table_exists:
     
         else:
             st.info("Nenhum dado disponível para os filtros selecionados.")
+
 
 
 
