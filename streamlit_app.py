@@ -31,12 +31,12 @@ def padronizar_colunas(df):
 # =========================
 # Título
 # =========================
-st.title("📊 Relatórios de Coleta - LOGA")
+st.title("📊 Análise - Relatórios de Coleta")
 
 # =========================
 # Upload do arquivo
 # =========================
-uploaded_file = st.file_uploader("Suba o relatório em Excel", type=["xlsx"])
+uploaded_file = st.file_uploader("Suba o relatório de coleta em Excel (xlsx.)", type=["xlsx"])
 
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
@@ -88,11 +88,11 @@ if table_exists:
     # =========================
     # Filtros globais
     # =========================
-    st.sidebar.header("🔍 Filtros")
+    st.sidebar.header("Filtros de Pesquisa")
 
     f_sub = st.sidebar.multiselect("Subprefeitura", df_banco["subprefeitura"].dropna().unique() if "subprefeitura" in df_banco.columns else [])
     f_unidade = st.sidebar.multiselect("Unidade", df_banco["unidade"].dropna().unique() if "unidade" in df_banco.columns else [])
-    f_tipo = st.sidebar.multiselect("Tipo de Operação", df_banco["tipo_de_operacao"].dropna().unique() if "tipo_de_operacao" in df_banco.columns else [])
+    f_tipo = st.sidebar.multiselect("Tipo de Operação", df_banco["tipo_operacao"].dropna().unique() if "tipo_operacao" in df_banco.columns else [])
     f_turno = st.sidebar.multiselect("Turno", df_banco["turno"].dropna().unique() if "turno" in df_banco.columns else [])
 
     # Filtro de Mês/Ano (formato BR)
@@ -108,7 +108,7 @@ if table_exists:
     if f_unidade:
         df_filtered = df_filtered[df_filtered["unidade"].isin(f_unidade)]
     if f_tipo:
-        df_filtered = df_filtered[df_filtered["tipo_de_operacao"].isin(f_tipo)]
+        df_filtered = df_filtered[df_filtered["tipo_operacao"].isin(f_tipo)]
     if f_turno:
         df_filtered = df_filtered[df_filtered["turno"].isin(f_turno)]
     if f_mesano:
@@ -117,22 +117,22 @@ if table_exists:
     # =========================
     # Abas
     # =========================
-    tab1, tab2, tab3, tab4 = st.tabs(["🚛 Veículos", "🏙️ Operacional/Subsetores", "📏 Quilometragem", "⏱️ Horas"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Veículos", "Setores", "Quilometragem", "Horas"])
 
     with tab1:
-        st.subheader("🚛 Análises de Veículos")
+        st.subheader("Análise de Veículos")
         st.dataframe(df_filtered)
 
     with tab2:
-        st.subheader("🏙️ Análises Operacionais / Subsetores")
+        st.subheader("Análise de Setores")
         st.dataframe(df_filtered)
 
     with tab3:
-        st.subheader("📏 Análises de Quilometragem")
+        st.subheader("Análise de KM")
         st.dataframe(df_filtered)
 
     with tab4:
-        st.subheader("⏱️ Análises de Horas")
+        st.subheader("Análise de Horas")
         st.dataframe(df_filtered)
 
 else:
