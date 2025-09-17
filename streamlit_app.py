@@ -166,32 +166,32 @@ if table_exists:
     
             col1, col2, col3, col4 = st.columns(4)
             col1.metric("📈 % Realizado", f"{pct_realizado}%")
-            col2.metric("🛣 Total KM", f"{total_km} km")
-            col3.metric("⏱ Total Horas", f"{round(total_horas,1)} h")
+            col2.metric("🚛 Total KM", f"{total_km} km")
+            col3.metric("⏱️ Total Horas", f"{round(total_horas,1)} h")
             col4.metric("🏆 Setor com maior KM", top_setor_km)
     
             # -------------------------
             # Gráfico de barras: KM por setor
             # -------------------------
-            if "subprefeitura" in df_filtered.columns and "km" in df_filtered.columns:
-                km_por_setor = df_filtered.groupby("subprefeitura")["km"].sum().reset_index()
+            if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
+                km_por_setor = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().reset_index()
                 km_por_setor = km_por_setor.sort_values("km", ascending=True)
-                fig_km = px.bar(km_por_setor, x="km", y="subprefeitura", orientation='h', text="km")
+                fig_km = px.bar(km_por_setor, x="km", y="subprefeitura", orientation='h', text="total_de_kms")
                 st.plotly_chart(fig_km, use_container_width=True)
     
             # -------------------------
             # Gráfico de linha: evolução diária do % realizado
             # -------------------------
-            if "data" in df_filtered.columns and "pct_realizado" in df_filtered.columns:
-                evolucao = df_filtered.groupby("data")["pct_realizado"].mean().reset_index()
-                fig_evol = px.line(evolucao, x="data", y="pct_realizado", markers=True)
+            if "data" in df_filtered.columns and "%_realizado" in df_filtered.columns:
+                evolucao = df_filtered.groupby("data")["%_realizado"].mean().reset_index()
+                fig_evol = px.line(evolucao, x="data", y="%_realizado", markers=True)
                 st.plotly_chart(fig_evol, use_container_width=True)
     
             # -------------------------
             # Tabela rápida: top 5 setores por % realizado
             # -------------------------
-            if "subprefeitura" in df_filtered.columns and "%_realizado" in df_filtered.columns:
-                top_setores_pct = df_filtered.groupby("subprefeitura")["%_realizado"].mean().sort_values(ascending=False).head(5).reset_index()
+            if "setor" in df_filtered.columns and "%_realizado" in df_filtered.columns:
+                top_setores_pct = df_filtered.groupby("subprefeitura")["%_realizado"].mean().sort_values(ascending=False).head(10).reset_index()
                 st.subheader("Top 5 setores por % realizado")
                 st.dataframe(top_setores_pct)
     
