@@ -123,35 +123,56 @@ if table_exists:
     tab1, tab2, tab3, tab4, tab5= st.tabs(["📊 Visão Geral","🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"])
 
     with tab1:
-        st.subheader("📊 Visão Geral")
+        st.subheader("Análise Geral")
     
-        # Cards rápidos
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            total_pontos = df_filtered["total_pontos"].sum() if "total_pontos" in df_filtered.columns else 0
-            coletados = df_filtered["coletados"].sum() if "coletados" in df_filtered.columns else 0
-            st.metric("Total de Pontos", f"{total_pontos} / {coletados}")
-        with col2:
-            percentual_realizado = (coletados / total_pontos * 100) if total_pontos > 0 else 0
-            st.metric("Percentual Realizado", f"{percentual_realizado:.2f}%")
-        with col3:
-            km_total = df_filtered["km_total"].sum() if "km_total" in df_filtered.columns else 0
-            st.metric("KM Rodado", f"{km_total} km")
-        with col4:
-            horas_totais = df_filtered["horas_totais"].sum() if "horas_totais" in df_filtered.columns else 0
-            st.metric("Horas de Operação", f"{horas_totais} h")
+        # Garantir que as colunas numéricas estão no formato certo
+        if "total_de_kms" in df_filtered.columns:
+            df_filtered["total_de_kms"] = pd.to_numeric(df_filtered["total_de_kms"], errors="coerce")
     
-        # Gráfico de KM por Subprefeitura
-        km_por_sub = df_filtered.groupby("subprefeitura")["km_total"].sum().reset_index()
-        km_por_sub = km_por_sub.sort_values("km_total", ascending=False)
-        fig_km = px.bar(km_por_sub, x="km_total", y="subprefeitura", orientation='h', text="km_total")
-        st.plotly_chart(fig_km)
+        if "percentual_realizado" in df_filtered.columns:
+            df_filtered["percentual_realizado"] = pd.to_numeric(df_filtered["percentual_realizado"], errors="coerce")
     
-        # Gráfico de Horas por Subprefeitura
-        horas_por_sub = df_filtered.groupby("subprefeitura")["horas_totais"].sum().reset_index()
-        horas_por_sub = horas_por_sub.sort_values("horas_totais", ascending=False)
-        fig_horas = px.bar(horas_por_sub, x="horas_totais", y="subprefeitura", orientation='h', text="horas_totais")
-        st.plotly_chart(fig_horas)
+        # Conversão da coluna de horas se existir
+        if "horas_operacao" in df_filtered.columns:
+            def parse_horas(x):
+                if pd.isna(x):
+                    return 0
+                try:
+                    h, m = 0, 0
+                    if "h" in str(x):
+                        h = int(str(x).split("h")[0].strip())
+                    if "m" in str(x):
+                        m = int(str(x).split("h")[-1].replace("m", "").strip())
+                    return h + m/60
+                except:
+                    return 0
+    
+            df_filtered["horas_operacao_num"] = df_filtered["horas_operacao"].apply(parse_horas)
+    
+        # KPIs
+        total_km = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
+        media_realizado = df_filtered["percentual_realizado"].mean() if "percentual_realizado" in df_filtered.columns else 0
+        total_horas = df_filtered["horas_operacao_num"].sum() if "horas_operacao_num" in df_filtered.columns else 0
+    
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total de KM", f"{total_km:,.0f} km")
+        col2.metric("% Médio Realizado", f"{media_realizado:.1f}%")
+        col3.metric("Total de Horas", f"{total_horas:.1f} h")
+    
+        # Gráfico de KM por subprefeitura
+        if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
+            km_por_sub = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().reset_index()
+            fig_km = px.bar(km_por_sub, x="total_de_kms", y="subprefeitura",
+                            orientation='h', text="total_de_kms")
+            fig_km.update_traces(texttemplate='%{text:.0f}', textposition='outside')
+            st.plotly_chart(fig_km, use_container_width=True)
+    
+        # Gráfico da evolução do % realizado ao longo do tempo
+        if "data" in df_filtered.columns and "percentual_realizado" in df_filtered.columns:
+            evolucao = df_filtered.groupby("data")["percentual_realizado"].mean().reset_index()
+            fig_realizado = px.line(evolucao, x="data", y="percentual_realizado", markers=True)
+            st.plotly_chart(fig_realizado, use_container_width=True)
+
 
 
 
