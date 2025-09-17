@@ -117,21 +117,25 @@ if table_exists:
     # =========================
     # Abas
     # =========================
-    tab1, tab2, tab3, tab4 = st.tabs(["🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"])
+    tab1, tab2, tab3, tab4, tab5= st.tabs(["📊 Visão Geral","🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"])
 
     with tab1:
+        st.subheader("Análise Geral")
+        st.dataframe(df_filtered)
+        
+    with tab2:
         st.subheader("Análise de Setores")
         st.dataframe(df_filtered)
 
-    with tab2:
+    with tab3:
         st.subheader("Análise de Veículos")
         st.dataframe(df_filtered)
 
-    with tab3:
+    with tab4:
         st.subheader("Análise de KM")
         st.dataframe(df_filtered)
 
-    with tab4:
+    with tab5:
         st.subheader("Análise de Horas")
         st.dataframe(df_filtered)
 
