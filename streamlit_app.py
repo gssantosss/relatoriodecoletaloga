@@ -145,6 +145,29 @@ if table_exists:
         )
         f_mesano = None
 
+    # =========================
+    # Aplicar filtros
+    # =========================
+    df_filtered = df_banco.copy()
+    
+    if f_sub:
+        df_filtered = df_filtered[df_filtered["subprefeitura"].isin(f_sub)]
+    if f_unidade:
+        df_filtered = df_filtered[df_filtered["unidade"].isin(f_unidade)]
+    if f_tipo:
+        df_filtered = df_filtered[df_filtered["tipo_operacao"].isin(f_tipo)]
+    if f_turno:
+        df_filtered = df_filtered[df_filtered["turno"].isin(f_turno)]
+    if f_mesano:
+        df_filtered = df_filtered[df_filtered["mesano"].isin(f_mesano)]
+    if f_periodo and len(f_periodo) == 2:
+        start_date, end_date = f_periodo
+        df_filtered = df_filtered[
+            (df_filtered["data"] >= pd.to_datetime(start_date)) &
+            (df_filtered["data"] <= pd.to_datetime(end_date))
+        ]
+
+
 
     # =========================
     # Abas
