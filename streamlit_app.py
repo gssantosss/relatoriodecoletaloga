@@ -236,8 +236,8 @@ if table_exists:
     
         # Gráfico da evolução do % realizado ao longo do tempo
         if "mesano" in df_filtered.columns and "%_realizado" in df_filtered.columns:
-            df_filtered = df_filtered[df_filtered["mesano_dt"] <= pd.Timestamp.today()]
-            evolucao = df_filtered.groupby("data")["%_realizado"].mean().reset_index()
+            df_filtered = df_filtered[df_filtered["mesano"] <= pd.Timestamp.today()]
+            evolucao = df_filtered.groupby("mesano")["%_realizado"].mean().reset_index()
             fig_realizado = px.line(
                 evolucao,
                 x="mesano",
