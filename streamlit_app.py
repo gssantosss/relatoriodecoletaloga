@@ -246,8 +246,7 @@ if table_exists:
                 text=evolucao["%_realizado"].round(1),
                 title="📈 Evolução do % Realizado"
             )
-
-            )
+            
             fig_realizado.update_traces(
                 textposition="top center",
                 hovertemplate="<b>%{x}</b><br>% Realizado: %{y:.1f}%"
