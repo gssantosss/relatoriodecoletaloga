@@ -154,7 +154,7 @@ if table_exists:
             # -------------------------
             # Cards principais
             # -------------------------
-            total_km = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
+            total_de_kms = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
             total_horas = df_filtered["horas_operacao_decimal"].sum()
             pct_realizado = int(df_filtered["%_realizado"].mean()) if "%_realizado" in df_filtered.columns else 0
     
