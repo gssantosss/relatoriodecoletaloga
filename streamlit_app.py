@@ -191,7 +191,7 @@ if table_exists:
             # Tabela rápida: top 5 setores por % realizado
             # -------------------------
             if "subprefeitura" in df_filtered.columns and "%_realizado" in df_filtered.columns:
-                top_setores_% = df_filtered.groupby("subprefeitura")["%_realizado"].mean().sort_values(ascending=False).head(5).reset_index()
+                top_setores_pct = df_filtered.groupby("subprefeitura")["%_realizado"].mean().sort_values(ascending=False).head(5).reset_index()
                 st.subheader("Top 5 setores por % realizado")
                 st.dataframe(top_setores_%)
     
