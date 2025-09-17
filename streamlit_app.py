@@ -31,7 +31,7 @@ def padronizar_colunas(df):
 # =========================
 # Título
 # =========================
-st.title("📊 Análise - Relatórios de Coleta")
+st.title("Análise - Relatórios de Coleta")
 
 # =========================
 # Upload do arquivo
@@ -59,12 +59,12 @@ if uploaded_file is not None:
     df.to_sql("relatorios", conn, if_exists="replace", index=False)
     conn.close()
 
-    st.success("Relatório salvo no banco com sucesso ✅ (tabela recriada do zero)")
+    st.success("Relatório salvo no banco com sucesso ✅")
 
 # =========================
 # Mostrar dados já no banco
 # =========================
-st.subheader("📂 Relatórios já armazenados")
+st.subheader("📂 Relatórios Armazenados")
 
 conn = get_connection()
 cursor = conn.cursor()
