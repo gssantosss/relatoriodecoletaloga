@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import unicodedata
+import plotly.express as px
 
 # =========================
 # Função para conectar no banco
