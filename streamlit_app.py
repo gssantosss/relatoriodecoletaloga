@@ -163,15 +163,42 @@ if table_exists:
         # Gráfico de KM por subprefeitura
         if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
             km_por_sub = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().reset_index()
-            fig_km = px.bar(km_por_sub, x="total_de_kms", y="subprefeitura",
-                            orientation='h', text="total_de_kms")
-            fig_km.update_traces(texttemplate='%{text:.0f}', textposition='outside')
+            fig_km = px.bar(
+                km_por_sub,
+                x="total_de_kms",
+                y="subprefeitura",
+                orientation='h',
+                text="total_de_kms",
+                title="🚛 Quilometragem por Subprefeitura"
+            )
+            fig_km.update_traces(
+                texttemplate='%{text:.0f}', 
+                textposition='outside',
+                hovertemplate="<b>%{y}</b><br>KMs: %{x:,}"
+            )
+            fig_km.update_layout(
+                xaxis_title="Total de KM",
+                yaxis_title="Subprefeitura",
+                showlegend=False
+            )
             st.plotly_chart(fig_km, use_container_width=True)
+
     
         # Gráfico da evolução do % realizado ao longo do tempo
-        if "data" in df_filtered.columns and "%_realizado" in df_filtered.columns:
-            evolucao = df_filtered.groupby("data")["%_realizado"].mean().reset_index()
-            fig_realizado = px.line(evolucao, x="data", y="%_realizado", markers=True)
+        if "data" in df_filtered.columns and "percentual_realizado" in df_filtered.columns:
+            evolucao = df_filtered.groupby("data")["percentual_realizado"].mean().reset_index()
+            fig_realizado = px.line(
+                evolucao,
+                x="data",
+                y="percentual_realizado",
+                markers=True,
+                title="📈 Evolução do % Realizado"
+            )
+            fig_realizado.update_layout(
+                xaxis_title="Data",
+                yaxis_title="% Realizado",
+                hovermode="x unified"
+            )
             st.plotly_chart(fig_realizado, use_container_width=True)
 
 
