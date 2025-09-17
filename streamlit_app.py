@@ -130,8 +130,8 @@ if table_exists:
         if "total_de_kms" in df_filtered.columns:
             df_filtered["total_de_kms"] = pd.to_numeric(df_filtered["total_de_kms"], errors="coerce")
     
-        if "percentual_realizado" in df_filtered.columns:
-            df_filtered["percentual_realizado"] = pd.to_numeric(df_filtered["percentual_realizado"], errors="coerce")
+        if "%_realizado" in df_filtered.columns:
+            df_filtered["%_realizado"] = pd.to_numeric(df_filtered["%_realizado"], errors="coerce")
     
         # Conversão da coluna de horas se existir
         if "horas_operacao" in df_filtered.columns:
@@ -152,7 +152,7 @@ if table_exists:
     
         # KPIs
         total_km = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
-        media_realizado = df_filtered["percentual_realizado"].mean() if "percentual_realizado" in df_filtered.columns else 0
+        media_realizado = df_filtered["%_realizado"].mean() if "%_realizado" in df_filtered.columns else 0
         total_horas = df_filtered["horas_operacao_num"].sum() if "horas_operacao_num" in df_filtered.columns else 0
     
         col1, col2, col3 = st.columns(3)
@@ -169,9 +169,9 @@ if table_exists:
             st.plotly_chart(fig_km, use_container_width=True)
     
         # Gráfico da evolução do % realizado ao longo do tempo
-        if "data" in df_filtered.columns and "percentual_realizado" in df_filtered.columns:
-            evolucao = df_filtered.groupby("data")["percentual_realizado"].mean().reset_index()
-            fig_realizado = px.line(evolucao, x="data", y="percentual_realizado", markers=True)
+        if "data" in df_filtered.columns and "%_realizado" in df_filtered.columns:
+            evolucao = df_filtered.groupby("data")["%_realizado"].mean().reset_index()
+            fig_realizado = px.line(evolucao, x="data", y="%_realizado", markers=True)
             st.plotly_chart(fig_realizado, use_container_width=True)
 
 
