@@ -90,7 +90,7 @@ if table_exists:
     # Filtros globais unificados
     # =========================
     st.sidebar.header("Filtros de Pesquisa")
-
+    
     # Filtros simples
     f_sub = st.sidebar.multiselect(
         "Subprefeitura",
@@ -108,33 +108,35 @@ if table_exists:
         "Turno",
         df_banco["turno"].dropna().unique() if "turno" in df_banco.columns else []
     )
-
+    
+    # Garantir que a coluna 'data' está correta e sem datas futuras
+    df_banco["data"] = pd.to_datetime(df_banco["data"], errors="coerce", dayfirst=True)
+    df_banco = df_banco[df_banco["data"].notna()]
+    df_banco = df_banco[df_banco["data"] <= pd.Timestamp.today()]
+    
+    # Criar colunas auxiliares
+    df_banco["mesano"] = df_banco["data"].dt.strftime("%m/%Y")
+    df_banco["mesano_dt"] = pd.to_datetime(df_banco["mesano"], format="%m/%Y", errors="coerce")
+    
     # Granularidade
     granularidade = st.sidebar.radio("Filtrar por:", ["Mês/Ano", "Período de Dias"])
+    
     if granularidade == "Mês/Ano":
-        # Garantir que 'mesano_dt' está correto e sem datas futuras
-        df_banco["mesano_dt"] = pd.to_datetime(df_banco["mesano"], format="%m/%Y", errors="coerce")
-        df_banco = df_banco[df_banco["mesano_dt"].notna()]
-        df_banco = df_banco[df_banco["mesano_dt"] <= pd.Timestamp.today()]
-        
-        # Filtro de Mês/Ano com base nos dados válidos
-        f_mesano = st.sidebar.multiselect(
-            "Mês/Ano",
-            df_banco.sort_values("mesano_dt")["mesano"].unique()
-        )
-
+        # Determinar o último mês válido com base na última data real
+        ultimo_mes_valido = df_banco["data"].max()
+        ultimo_mesano_dt = pd.to_datetime(ultimo_mes_valido.strftime("%Y-%m-01"))
+    
+        # Filtrar os valores únicos de 'mesano' até o último mês válido
+        mesano_validos = df_banco[df_banco["mesano_dt"] <= ultimo_mesano_dt].sort_values("mesano_dt")["mesano"].unique()
+    
+        f_mesano = st.sidebar.multiselect("Mês/Ano", mesano_validos)
         f_periodo = None
+    
     else:
-        # Garantir que a coluna 'data' está no formato correto e sem datas futuras
-        df_banco["data"] = pd.to_datetime(df_banco["data"], errors="coerce", dayfirst=True)
-        df_banco = df_banco[df_banco["data"].notna()]
-        df_banco = df_banco[df_banco["data"] <= pd.Timestamp.today()]
-        
         # Definir limites reais com base nos dados válidos
         min_date = df_banco["data"].min()
         max_date = df_banco["data"].max()
-        
-        # Filtro de período com limites reais
+    
         f_periodo = st.sidebar.date_input(
             "Período (dd/mm/aaaa)",
             [min_date, max_date],
@@ -143,6 +145,7 @@ if table_exists:
             format="DD/MM/YYYY"
         )
         f_mesano = None
+    
 
     # =========================
     # Aplicar filtros
