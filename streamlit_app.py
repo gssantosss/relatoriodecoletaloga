@@ -125,78 +125,33 @@ if table_exists:
     with tab1:
         st.subheader("📊 Visão Geral")
     
-        if not df_filtered.empty:
+        # Cards rápidos
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            total_pontos = df_filtered["total_pontos"].sum() if "total_pontos" in df_filtered.columns else 0
+            coletados = df_filtered["coletados"].sum() if "coletados" in df_filtered.columns else 0
+            st.metric("Total de Pontos", f"{total_pontos} / {coletados}")
+        with col2:
+            percentual_realizado = (coletados / total_pontos * 100) if total_pontos > 0 else 0
+            st.metric("Percentual Realizado", f"{percentual_realizado:.2f}%")
+        with col3:
+            km_total = df_filtered["km_total"].sum() if "km_total" in df_filtered.columns else 0
+            st.metric("KM Rodado", f"{km_total} km")
+        with col4:
+            horas_totais = df_filtered["horas_totais"].sum() if "horas_totais" in df_filtered.columns else 0
+            st.metric("Horas de Operação", f"{horas_totais} h")
     
-            # -------------------------
-            # Normalizar coluna de horas
-            # -------------------------
-            def horas_para_decimal(hora_str):
-                """
-                Converte '9h 10m' ou número em horas decimais.
-                """
-                if pd.isna(hora_str):
-                    return 0
-                if isinstance(hora_str, (int, float)):
-                    return hora_str
-                partes = hora_str.split("h")
-                try:
-                    horas = int(partes[0].strip())
-                    minutos = int(partes[1].replace("m", "").strip()) if len(partes) > 1 else 0
-                    return horas + minutos / 60
-                except:
-                    return 0
+        # Gráfico de KM por Subprefeitura
+        km_por_sub = df_filtered.groupby("subprefeitura")["km_total"].sum().reset_index()
+        km_por_sub = km_por_sub.sort_values("km_total", ascending=False)
+        fig_km = px.bar(km_por_sub, x="km_total", y="subprefeitura", orientation='h', text="km_total")
+        st.plotly_chart(fig_km)
     
-            if "horas_operacao" in df_filtered.columns:
-                df_filtered["horas_operacao_decimal"] = df_filtered["horas_operacao"].apply(horas_para_decimal)
-            else:
-                df_filtered["horas_operacao_decimal"] = 0
-    
-            # -------------------------
-            # Cards principais
-            # -------------------------
-            total_km = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
-            total_horas = df_filtered["horas_operacao_decimal"].sum()
-            pct_realizado = int(df_filtered["%_realizado"].mean()) if "%_realizado" in df_filtered.columns else 0
-    
-            # Top setor por KM
-            if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
-                top_setor_km = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().sort_values(ascending=False).index[0]
-            else:
-                top_setor_km = "N/A"
-    
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("📈 % Realizado", f"{pct_realizado}%")
-            col2.metric("🚛 Total KM", f"{total_km} km")
-            col3.metric("⏱️ Total Horas", f"{round(total_horas,1)} h")
-            col4.metric("🏆 Setor com maior KM", top_setor_km)
-    
-            # -------------------------
-            # Gráfico de barras: KM por setor
-            # -------------------------
-            if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
-                km_por_setor = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().reset_index()
-                km_por_setor = km_por_setor.sort_values("total_de_kms", ascending=True)
-                fig_km = px.bar(km_por_setor, x="total_de_kms", y="subprefeitura", orientation='h', text="total_de_kms")
-                st.plotly_chart(fig_km, use_container_width=True)
-    
-            # -------------------------
-            # Gráfico de linha: evolução diária do % realizado
-            # -------------------------
-            if "data" in df_filtered.columns and "%_realizado" in df_filtered.columns:
-                evolucao = df_filtered.groupby("data")["%_realizado"].mean().reset_index()
-                fig_evol = px.line(evolucao, x="data", y="%_realizado", markers=True)
-                st.plotly_chart(fig_evol, use_container_width=True)
-    
-            # -------------------------
-            # Tabela rápida: top 5 setores por % realizado
-            # -------------------------
-            if "setor" in df_filtered.columns and "%_realizado" in df_filtered.columns:
-                top_setores_pct = df_filtered.groupby("subprefeitura")["%_realizado"].mean().sort_values(ascending=False).head(10).reset_index()
-                st.subheader("Top 5 setores por % realizado")
-                st.dataframe(top_setores_pct)
-    
-        else:
-            st.info("Nenhum dado disponível para os filtros selecionados.")
+        # Gráfico de Horas por Subprefeitura
+        horas_por_sub = df_filtered.groupby("subprefeitura")["horas_totais"].sum().reset_index()
+        horas_por_sub = horas_por_sub.sort_values("horas_totais", ascending=False)
+        fig_horas = px.bar(horas_por_sub, x="horas_totais", y="subprefeitura", orientation='h', text="horas_totais")
+        st.plotly_chart(fig_horas)
 
 
 
