@@ -159,8 +159,8 @@ if table_exists:
             pct_realizado = int(df_filtered["%_realizado"].mean()) if "%_realizado" in df_filtered.columns else 0
     
             # Top setor por KM
-            if "subprefeitura" in df_filtered.columns and "km" in df_filtered.columns:
-                top_setor_km = df_filtered.groupby("subprefeitura")["km"].sum().sort_values(ascending=False).index[0]
+            if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
+                top_setor_km = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().sort_values(ascending=False).index[0]
             else:
                 top_setor_km = "N/A"
     
@@ -175,8 +175,8 @@ if table_exists:
             # -------------------------
             if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
                 km_por_setor = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().reset_index()
-                km_por_setor = km_por_setor.sort_values("km", ascending=True)
-                fig_km = px.bar(km_por_setor, x="km", y="subprefeitura", orientation='h', text="total_de_kms")
+                km_por_setor = km_por_setor.sort_values("total_de_kms", ascending=True)
+                fig_km = px.bar(km_por_setor, x="total_de_kms", y="subprefeitura", orientation='h', text="total_de_kms")
                 st.plotly_chart(fig_km, use_container_width=True)
     
             # -------------------------
