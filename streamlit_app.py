@@ -193,7 +193,7 @@ if table_exists:
             if "subprefeitura" in df_filtered.columns and "%_realizado" in df_filtered.columns:
                 top_setores_pct = df_filtered.groupby("subprefeitura")["%_realizado"].mean().sort_values(ascending=False).head(5).reset_index()
                 st.subheader("Top 5 setores por % realizado")
-                st.dataframe(top_setores_%)
+                st.dataframe(top_setores_pct)
     
         else:
             st.info("Nenhum dado disponível para os filtros selecionados.")
