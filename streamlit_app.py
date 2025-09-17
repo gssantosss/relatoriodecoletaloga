@@ -145,7 +145,7 @@ if f_periodo and len(f_periodo) == 2:
                               (df_filtered["data"] <= pd.to_datetime(end_date))]
 
 # =========================
-# Abas (agora totalmente fora do if/else)
+# Abas
 # =========================
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📊 Visão Geral", "🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"
@@ -153,112 +153,98 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs([
 
 with tab1:
     st.subheader("Análise Geral")
-    # Coloque aqui seus KPIs e gráficos de visão geral
-
-            # Garantir que as colunas numéricas estão no formato certo
-            if "total_de_kms" in df_filtered.columns:
-                df_filtered["total_de_kms"] = pd.to_numeric(df_filtered["total_de_kms"], errors="coerce")
-        
-            if "%_realizado" in df_filtered.columns:
-                df_filtered["%_realizado"] = pd.to_numeric(df_filtered["%_realizado"], errors="coerce")
-        
-            # Conversão da coluna de horas se existir
-            if "horas_operacao" in df_filtered.columns:
-                def parse_horas(x):
-                    if pd.isna(x):
-                        return 0
-                    try:
-                        h, m = 0, 0
-                        if "h" in str(x):
-                            h = int(str(x).split("h")[0].strip())
-                        if "m" in str(x):
-                            m = int(str(x).split("h")[-1].replace("m", "").strip())
-                        return h + m/60
-                    except:
-                        return 0
-        
-                df_filtered["horas_operacao_num"] = df_filtered["horas_operacao"].apply(parse_horas)
-        
-            # KPIs
-            total_km = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
-            media_realizado = df_filtered["%_realizado"].mean() if "%_realizado" in df_filtered.columns else 0
-            total_horas = df_filtered["horas_operacao_num"].sum() if "horas_operacao_num" in df_filtered.columns else 0
-        
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Total de KM", f"{total_km:,.0f} km")
-            col2.metric("% Médio Realizado", f"{media_realizado:.1f}%")
-            col3.metric("Total de Horas", f"{total_horas:.1f} h")
-        
-            # Gráfico de KM por subprefeitura
-            if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
-                km_por_sub = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().reset_index()
-                fig_km = px.bar(
-                    km_por_sub,
-                    x="total_de_kms",
-                    y="subprefeitura",
-                    orientation='h',
-                    text="total_de_kms",
-                    title="🚛 Quilometragem por Subprefeitura"
-                )
-                fig_km.update_traces(
-                    texttemplate='%{text:.0f}', 
-                    textposition='outside',
-                    hovertemplate="<b>%{y}</b><br>KMs: %{x:,}"
-                )
-                fig_km.update_layout(
-                    xaxis_title="Total de KM",
-                    yaxis_title="Subprefeitura",
-                    showlegend=False
-                )
-                st.plotly_chart(fig_km, use_container_width=True)
     
-        
-            # Gráfico da evolução do % realizado ao longo do tempo
-            if "mesano" in df_filtered.columns and "%_realizado" in df_filtered.columns:
-                evolucao = df_filtered.groupby("mesano")["%_realizado"].mean().reset_index()
-                fig_realizado = px.line(
-                    evolucao,
-                    x="mesano",
-                    y="%_realizado",
-                    markers=True,
-                    title="📈 Evolução do % Realizado"
-                )
-                # Adicionar rótulo de dados
-                fig_realizado.update_traces(
-                    text=evolucao["%_realizado"].round(1),
-                    textposition="top center"
-                )
-            
-                fig_realizado.update_layout(
-                    xaxis_title="Mês/Ano",
-                    yaxis_title="% Realizado",
-                    hovermode="x unified"
-                )
-                st.plotly_chart(fig_realizado, use_container_width=True)
-            
-        
-
-
-
+    # Garantir que as colunas numéricas estão no formato certo
+    if "total_de_kms" in df_filtered.columns:
+        df_filtered["total_de_kms"] = pd.to_numeric(df_filtered["total_de_kms"], errors="coerce")
     
-        
-    with tab2:
-        st.subheader("Análise de Setores")
-        st.dataframe(df_filtered)
+    if "%_realizado" in df_filtered.columns:
+        df_filtered["%_realizado"] = pd.to_numeric(df_filtered["%_realizado"], errors="coerce")
+    
+    # Conversão da coluna de horas se existir
+    if "horas_operacao" in df_filtered.columns:
+        def parse_horas(x):
+            if pd.isna(x):
+                return 0
+            try:
+                h, m = 0, 0
+                if "h" in str(x):
+                    h = int(str(x).split("h")[0].strip())
+                if "m" in str(x):
+                    m = int(str(x).split("h")[-1].replace("m", "").strip())
+                return h + m/60
+            except:
+                return 0
 
-    with tab3:
-        st.subheader("Análise de Veículos")
-        st.dataframe(df_filtered)
+        df_filtered["horas_operacao_num"] = df_filtered["horas_operacao"].apply(parse_horas)
+    
+    # KPIs
+    total_km = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
+    media_realizado = df_filtered["%_realizado"].mean() if "%_realizado" in df_filtered.columns else 0
+    total_horas = df_filtered["horas_operacao_num"].sum() if "horas_operacao_num" in df_filtered.columns else 0
 
-    with tab4:
-        st.subheader("Análise de KM")
-        st.dataframe(df_filtered)
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total de KM", f"{total_km:,.0f} km")
+    col2.metric("% Médio Realizado", f"{media_realizado:.1f}%")
+    col3.metric("Total de Horas", f"{total_horas:.1f} h")
+    
+    # Gráfico de KM por subprefeitura
+    if "subprefeitura" in df_filtered.columns and "total_de_kms" in df_filtered.columns:
+        km_por_sub = df_filtered.groupby("subprefeitura")["total_de_kms"].sum().reset_index()
+        fig_km = px.bar(
+            km_por_sub,
+            x="total_de_kms",
+            y="subprefeitura",
+            orientation='h',
+            text="total_de_kms",
+            title="🚛 Quilometragem por Subprefeitura"
+        )
+        fig_km.update_traces(
+            texttemplate='%{text:.0f}', 
+            textposition='outside',
+            hovertemplate="<b>%{y}</b><br>KMs: %{x:,}"
+        )
+        fig_km.update_layout(
+            xaxis_title="Total de KM",
+            yaxis_title="Subprefeitura",
+            showlegend=False
+        )
+        st.plotly_chart(fig_km, use_container_width=True)
 
-    with tab5:
-        st.subheader("Análise de Horas")
-        st.dataframe(df_filtered)
+    # Gráfico da evolução do % realizado ao longo do tempo
+    if "mesano" in df_filtered.columns and "%_realizado" in df_filtered.columns:
+        evolucao = df_filtered.groupby("mesano")["%_realizado"].mean().reset_index()
+        fig_realizado = px.line(
+            evolucao,
+            x="mesano",
+            y="%_realizado",
+            markers=True,
+            title="📈 Evolução do % Realizado"
+        )
+        # Adicionar rótulo de dados
+        fig_realizado.update_traces(
+            text=evolucao["%_realizado"].round(1),
+            textposition="top center"
+        )
+        fig_realizado.update_layout(
+            xaxis_title="Mês/Ano",
+            yaxis_title="% Realizado",
+            hovermode="x unified"
+        )
+        st.plotly_chart(fig_realizado, use_container_width=True)
 
-else:
-    st.info("Nenhum relatório foi carregado.")
+with tab2:
+    st.subheader("Análise de Setores")
+    st.dataframe(df_filtered)
 
-conn.close()
+with tab3:
+    st.subheader("Análise de Veículos")
+    st.dataframe(df_filtered)
+
+with tab4:
+    st.subheader("Análise de KM")
+    st.dataframe(df_filtered)
+
+with tab5:
+    st.subheader("Análise de Horas")
+    st.dataframe(df_filtered)
