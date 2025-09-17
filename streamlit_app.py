@@ -86,6 +86,10 @@ if table_exists:
 
     st.dataframe(df_banco.head())
 
+
+
+
+
 # =========================
 # Filtros globais unificados
 # =========================
@@ -93,75 +97,32 @@ if table_exists:
     df_banco = pd.read_sql("SELECT * FROM relatorios", conn)
     df_banco = padronizar_colunas(df_banco)
 
-    if "data" in df_banco.columns:
-        df_banco["data"] = pd.to_datetime(df_banco["data"], dayfirst=True, errors="coerce")
-        df_banco["ano"] = df_banco["data"].dt.year
-        df_banco["mesano"] = df_banco["data"].dt.strftime("%m/%Y")
+    # Filtrar apenas linhas com datas válidas
+if "data" in df_banco.columns:
+    df_banco["data"] = pd.to_datetime(df_banco["data"], dayfirst=True, errors="coerce")
+    df_banco = df_banco[df_banco["data"].notna()]  # remove datas inválidas
+    df_banco["mesano"] = df_banco["data"].dt.strftime("%m/%Y")
 
-    st.sidebar.header("Filtros de Pesquisa")
+# Granularidade
+granularidade = st.sidebar.radio("Filtrar por:", ["Mês/Ano", "Período de Dias"])
 
-    # Filtros simples
-    f_sub = st.sidebar.multiselect(
-        "Subprefeitura",
-        df_banco["subprefeitura"].dropna().unique() if "subprefeitura" in df_banco.columns else []
+if granularidade == "Mês/Ano":
+    f_mesano = st.sidebar.multiselect(
+        "Mês/Ano",
+        sorted(df_banco["mesano"].unique())  # só meses válidos
     )
-    f_unidade = st.sidebar.multiselect(
-        "Unidade",
-        df_banco["unidade"].dropna().unique() if "unidade" in df_banco.columns else []
+    f_periodo = None
+else:
+    min_date = df_banco["data"].min()
+    max_date = df_banco["data"].max()
+    f_periodo = st.sidebar.date_input(
+        "Período (dd/mm/aaaa)",
+        [min_date, max_date],
+        min_value=min_date,
+        max_value=max_date,
+        format="DD/MM/YYYY"
     )
-    f_tipo = st.sidebar.multiselect(
-        "Tipo de Operação",
-        df_banco["tipo_operacao"].dropna().unique() if "tipo_operacao" in df_banco.columns else []
-    )
-    f_turno = st.sidebar.multiselect(
-        "Turno",
-        df_banco["turno"].dropna().unique() if "turno" in df_banco.columns else []
-    )
-
-    # Granularidade
-    granularidade = st.sidebar.radio("Filtrar por:", ["Mês/Ano", "Período de Dias"])
-
-    if granularidade == "Mês/Ano":
-        f_mesano = st.sidebar.multiselect(
-            "Mês/Ano",
-            df_banco["mesano"].dropna().unique() if "mesano" in df_banco.columns else []
-        )
-        f_periodo = None
-    else:
-        if "data" in df_banco.columns:
-            min_date = df_banco["data"].min()
-            max_date = df_banco["data"].max()
-            f_periodo = st.sidebar.date_input(
-                "Período (dd/mm/aaaa)",
-                [min_date, max_date],
-                min_value=min_date,
-                max_value=max_date,
-                format="DD/MM/YYYY"
-            )
-        f_mesano = None
-
-    # =========================
-    # Aplicar filtros
-    # =========================
-    df_filtered = df_banco.copy()
-
-    if f_sub:
-        df_filtered = df_filtered[df_filtered["subprefeitura"].isin(f_sub)]
-    if f_unidade:
-        df_filtered = df_filtered[df_filtered["unidade"].isin(f_unidade)]
-    if f_tipo:
-        df_filtered = df_filtered[df_filtered["tipo_operacao"].isin(f_tipo)]
-    if f_turno:
-        df_filtered = df_filtered[df_filtered["turno"].isin(f_turno)]
-
-    # Filtro final de data/mês
-    if f_mesano:
-        df_filtered = df_filtered[df_filtered["mesano"].isin(f_mesano)]
-    if f_periodo and len(f_periodo) == 2:
-        start_date, end_date = f_periodo
-        df_filtered = df_filtered[(df_filtered["data"] >= pd.to_datetime(start_date)) & (df_filtered["data"] <= pd.to_datetime(end_date))]
-
-
+    f_mesano = None
 
 
 
