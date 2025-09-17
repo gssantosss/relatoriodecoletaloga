@@ -1,12 +1,32 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
+import unicodedata
 
 # =========================
 # Função para conectar no banco
 # =========================
 def get_connection():
     return sqlite3.connect("relatorios.db")
+
+# =========================
+# Função para padronizar nomes das colunas
+# =========================
+def padronizar_colunas(df):
+    df.columns = (
+        df.columns.str.strip()
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace("-", "_")
+    )
+    # Tirar acentos
+    df.columns = [
+        unicodedata.normalize("NFKD", col)
+        .encode("ascii", errors="ignore")
+        .decode("utf-8")
+        for col in df.columns
+    ]
+    return df
 
 # =========================
 # Título
@@ -21,9 +41,12 @@ uploaded_file = st.file_uploader("Suba o relatório em Excel", type=["xlsx"])
 if uploaded_file is not None:
     df = pd.read_excel(uploaded_file)
 
+    # Padronizar colunas
+    df = padronizar_colunas(df)
+
     # Converter a coluna de Data
-    if "Data" in df.columns:
-        df["Data"] = pd.to_datetime(df["Data"], errors="coerce", dayfirst=True)
+    if "data" in df.columns:
+        df["data"] = pd.to_datetime(df["data"], errors="coerce", dayfirst=True)
 
     st.write("Pré-visualização do arquivo:")
     st.dataframe(df.head())
@@ -51,12 +74,14 @@ table_exists = cursor.fetchone()
 if table_exists:
     df_banco = pd.read_sql("SELECT * FROM relatorios", conn)
 
+    # Padronizar colunas de novo
+    df_banco = padronizar_colunas(df_banco)
+
     # Garantir que Data é datetime
-    if "Data" in df_banco.columns:
-        df_banco["Data"] = pd.to_datetime(df_banco["Data"], errors="coerce", dayfirst=True)
-        # Criar colunas de Ano e Mês/Ano
-        df_banco["Ano"] = df_banco["Data"].dt.year
-        df_banco["MesAno"] = df_banco["Data"].dt.strftime("%m/%Y")
+    if "data" in df_banco.columns:
+        df_banco["data"] = pd.to_datetime(df_banco["data"], errors="coerce", dayfirst=True)
+        df_banco["ano"] = df_banco["data"].dt.year
+        df_banco["mesano"] = df_banco["data"].dt.strftime("%m/%Y")
 
     st.dataframe(df_banco.head())
 
@@ -65,16 +90,13 @@ if table_exists:
     # =========================
     st.sidebar.header("🔍 Filtros")
 
-    f_sub = st.sidebar.multiselect("Subprefeitura", df_banco["Subprefeitura"].dropna().unique())
-    f_unidade = st.sidebar.multiselect("Unidade", df_banco["Unidade"].dropna().unique())
-    f_tipo = st.sidebar.multiselect("Tipo de Operação", df_banco["Tipo de Operacao"].dropna().unique())
-    f_turno = st.sidebar.multiselect("Turno", df_banco["Turno"].dropna().unique())
+    f_sub = st.sidebar.multiselect("Subprefeitura", df_banco["subprefeitura"].dropna().unique() if "subprefeitura" in df_banco.columns else [])
+    f_unidade = st.sidebar.multiselect("Unidade", df_banco["unidade"].dropna().unique() if "unidade" in df_banco.columns else [])
+    f_tipo = st.sidebar.multiselect("Tipo de Operação", df_banco["tipo_de_operacao"].dropna().unique() if "tipo_de_operacao" in df_banco.columns else [])
+    f_turno = st.sidebar.multiselect("Turno", df_banco["turno"].dropna().unique() if "turno" in df_banco.columns else [])
 
     # Filtro de Mês/Ano (formato BR)
-    if "MesAno" in df_banco.columns:
-        f_mesano = st.sidebar.multiselect("Mês/Ano", df_banco["MesAno"].dropna().unique())
-    else:
-        f_mesano = None
+    f_mesano = st.sidebar.multiselect("Mês/Ano", df_banco["mesano"].dropna().unique() if "mesano" in df_banco.columns else [])
 
     # =========================
     # Aplicar filtros
@@ -82,15 +104,15 @@ if table_exists:
     df_filtered = df_banco.copy()
 
     if f_sub:
-        df_filtered = df_filtered[df_filtered["Subprefeitura"].isin(f_sub)]
+        df_filtered = df_filtered[df_filtered["subprefeitura"].isin(f_sub)]
     if f_unidade:
-        df_filtered = df_filtered[df_filtered["Unidade"].isin(f_unidade)]
+        df_filtered = df_filtered[df_filtered["unidade"].isin(f_unidade)]
     if f_tipo:
-        df_filtered = df_filtered[df_filtered["Tipo de Operacao"].isin(f_tipo)]
+        df_filtered = df_filtered[df_filtered["tipo_de_operacao"].isin(f_tipo)]
     if f_turno:
-        df_filtered = df_filtered[df_filtered["Turno"].isin(f_turno)]
+        df_filtered = df_filtered[df_filtered["turno"].isin(f_turno)]
     if f_mesano:
-        df_filtered = df_filtered[df_filtered["MesAno"].isin(f_mesano)]
+        df_filtered = df_filtered[df_filtered["mesano"].isin(f_mesano)]
 
     # =========================
     # Abas
