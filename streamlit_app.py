@@ -282,7 +282,6 @@ if table_exists:
     
         # Criar DataFrame para o gráfico
         dados_pizza = pd.DataFrame({
-            "Tipo de Percurso": ["Fora do Setor", "Dentro do Setor"],
             "Distância Total": [total_fora, total_dentro]
         })
     
@@ -292,12 +291,12 @@ if table_exists:
             names="Tipo de Percurso",
             values="Distância Total",
             title="🚗 Proporção de Percursos",
-            hole=0.3
+            hole=0.6
         )
         fig_pizza.update_traces(
             textinfo='label+percent',
             hovertemplate="<b>%{label}</b><br>Distância: %{value:,} km<br>%{percent}",
-            textfont_size=14
+            textfont_size=12
         )
         fig_pizza.update_layout(showlegend=True)
     
