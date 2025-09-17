@@ -135,8 +135,6 @@ if table_exists:
             max_value=max_date,
             format="DD/MM/YYYY"
         )
-
-        )
         f_mesano = None
 
     # =========================
