@@ -64,7 +64,7 @@ if uploaded_file is not None:
 # =========================
 # Mostrar dados já no banco
 # =========================
-st.subheader("📂 Relatórios Armazenados")
+st.subheader("📂 Preview do Relatório")
 
 conn = get_connection()
 cursor = conn.cursor()
@@ -117,14 +117,14 @@ if table_exists:
     # =========================
     # Abas
     # =========================
-    tab1, tab2, tab3, tab4 = st.tabs(["🚛 Veículos", "🗂️ Setores", "📐 Quilometragem", "⏱️ Horas"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"])
 
     with tab1:
-        st.subheader("Análise de Veículos")
+        st.subheader("Análise de Setores")
         st.dataframe(df_filtered)
 
     with tab2:
-        st.subheader("Análise de Setores")
+        st.subheader("Análise de Veículos")
         st.dataframe(df_filtered)
 
     with tab3:
