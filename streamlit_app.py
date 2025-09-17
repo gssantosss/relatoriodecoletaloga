@@ -185,12 +185,12 @@ if table_exists:
 
     
         # Gráfico da evolução do % realizado ao longo do tempo
-        if "data" in df_filtered.columns and "percentual_realizado" in df_filtered.columns:
-            evolucao = df_filtered.groupby("data")["percentual_realizado"].mean().reset_index()
+        if "data" in df_filtered.columns and "%_realizado" in df_filtered.columns:
+            evolucao = df_filtered.groupby("data")["%_realizado"].mean().reset_index()
             fig_realizado = px.line(
                 evolucao,
                 x="data",
-                y="percentual_realizado",
+                y="%_realizado",
                 markers=True,
                 title="📈 Evolução do % Realizado"
             )
