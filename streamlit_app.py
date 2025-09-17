@@ -2,148 +2,118 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 
-# -------------------------------
-# Função pra conectar no banco
-# -------------------------------
+# =========================
+# Função para conectar no banco
+# =========================
 def get_connection():
     return sqlite3.connect("relatorios.db")
 
-# -------------------------------
-# Título do app
-# -------------------------------
-st.title("📊 Relatórios de Coleta")
+# =========================
+# Título
+# =========================
+st.title("📊 Relatórios de Coleta - LOGA")
 
-# -------------------------------
+# =========================
 # Upload do arquivo
-# -------------------------------
+# =========================
 uploaded_file = st.file_uploader("Suba o relatório em Excel", type=["xlsx"])
 
 if uploaded_file is not None:
-    # Ler o excel
     df = pd.read_excel(uploaded_file)
 
-    # Mostrar preview
+    # Converter a coluna de Data
+    if "Data" in df.columns:
+        df["Data"] = pd.to_datetime(df["Data"], errors="coerce", dayfirst=True)
+
     st.write("Pré-visualização do arquivo:")
     st.dataframe(df.head())
 
-    # Salvar no banco do zero
+    # Salvar no banco (zera antes)
     conn = get_connection()
     cursor = conn.cursor()
-
-    # Deleta tabela se já existir
     cursor.execute("DROP TABLE IF EXISTS relatorios")
     conn.commit()
-
-    # Substitui a tabela completamente
     df.to_sql("relatorios", conn, if_exists="replace", index=False)
     conn.close()
 
     st.success("Relatório salvo no banco com sucesso ✅ (tabela recriada do zero)")
 
-# -------------------------------
-# Carregar dados do banco
-# -------------------------------
+# =========================
+# Mostrar dados já no banco
+# =========================
+st.subheader("📂 Relatórios já armazenados")
+
 conn = get_connection()
 cursor = conn.cursor()
-
 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='relatorios'")
 table_exists = cursor.fetchone()
 
 if table_exists:
-    df = pd.read_sql("SELECT * FROM relatorios", conn)
-else:
-    df = pd.DataFrame()  # vazio se não tiver nada
-conn.close()
+    df_banco = pd.read_sql("SELECT * FROM relatorios", conn)
 
-# -------------------------------
-# Só mostra interface se tiver dados
-# -------------------------------
-if not df.empty:
-    # -------------------------------
+    # Garantir que Data é datetime
+    if "Data" in df_banco.columns:
+        df_banco["Data"] = pd.to_datetime(df_banco["Data"], errors="coerce", dayfirst=True)
+        # Criar colunas de Ano e Mês/Ano
+        df_banco["Ano"] = df_banco["Data"].dt.year
+        df_banco["MesAno"] = df_banco["Data"].dt.strftime("%m/%Y")
+
+    st.dataframe(df_banco.head())
+
+    # =========================
     # Filtros globais
-    # -------------------------------
-    st.sidebar.header("Filtros")
+    # =========================
+    st.sidebar.header("🔍 Filtros")
 
-    # Ajustar Data
-    if "Data" in df.columns:
-        df["Data"] = pd.to_datetime(df["Data"], errors="coerce")
+    f_sub = st.sidebar.multiselect("Subprefeitura", df_banco["Subprefeitura"].dropna().unique())
+    f_unidade = st.sidebar.multiselect("Unidade", df_banco["Unidade"].dropna().unique())
+    f_tipo = st.sidebar.multiselect("Tipo de Operação", df_banco["Tipo de Operacao"].dropna().unique())
+    f_turno = st.sidebar.multiselect("Turno", df_banco["Turno"].dropna().unique())
 
-    # Subprefeitura
-    if "Subprefeitura" in df.columns:
-        subprefeituras = df["Subprefeitura"].dropna().unique()
-        f_sub = st.sidebar.multiselect("Subprefeitura", subprefeituras, default=subprefeituras)
+    # Filtro de Mês/Ano (formato BR)
+    if "MesAno" in df_banco.columns:
+        f_mesano = st.sidebar.multiselect("Mês/Ano", df_banco["MesAno"].dropna().unique())
     else:
-        f_sub = []
+        f_mesano = None
 
-    # Período
-    if "Data" in df.columns and not df["Data"].isna().all():
-        data_min, data_max = df["Data"].min(), df["Data"].max()
-        f_data = st.sidebar.date_input("Período", [data_min, data_max])
-    else:
-        f_data = []
-
-    # Unidade
-    if "Unidade" in df.columns:
-        unidades = df["Unidade"].dropna().unique()
-        f_unidade = st.sidebar.multiselect("Unidade", unidades, default=unidades)
-    else:
-        f_unidade = []
-
-    # Tipo de Operação
-    if "Tipo de Operação" in df.columns:
-        tipos = df["Tipo de Operação"].dropna().unique()
-        f_tipo = st.sidebar.multiselect("Tipo de Operação", tipos, default=tipos)
-    else:
-        f_tipo = []
-
-    # Turno
-    if "Turno" in df.columns:
-        turnos = df["Turno"].dropna().unique()
-        f_turno = st.sidebar.multiselect("Turno", turnos, default=turnos)
-    else:
-        f_turno = []
-
-    # -------------------------------
+    # =========================
     # Aplicar filtros
-    # -------------------------------
-    df_filtered = df.copy()
-    if f_sub: df_filtered = df_filtered[df_filtered["Subprefeitura"].isin(f_sub)]
-    if f_unidade: df_filtered = df_filtered[df_filtered["Unidade"].isin(f_unidade)]
-    if f_tipo: df_filtered = df_filtered[df_filtered["Tipo de Operação"].isin(f_tipo)]
-    if f_turno: df_filtered = df_filtered[df_filtered["Turno"].isin(f_turno)]
-    if f_data and "Data" in df_filtered.columns:
-        df_filtered = df_filtered[df_filtered["Data"].between(f_data[0], f_data[1])]
+    # =========================
+    df_filtered = df_banco.copy()
 
-    # -------------------------------
-    # Layout com abas
-    # -------------------------------
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(
-        ["📊 Visão Geral", "🚛 Veículos", "🌍 Subprefeituras/Setores", "📏 Quilometragem", "⏱️ Horas"]
-    )
+    if f_sub:
+        df_filtered = df_filtered[df_filtered["Subprefeitura"].isin(f_sub)]
+    if f_unidade:
+        df_filtered = df_filtered[df_filtered["Unidade"].isin(f_unidade)]
+    if f_tipo:
+        df_filtered = df_filtered[df_filtered["Tipo de Operacao"].isin(f_tipo)]
+    if f_turno:
+        df_filtered = df_filtered[df_filtered["Turno"].isin(f_turno)]
+    if f_mesano:
+        df_filtered = df_filtered[df_filtered["MesAno"].isin(f_mesano)]
 
-    # -------------------------------
-    # Abas (placeholders)
-    # -------------------------------
+    # =========================
+    # Abas
+    # =========================
+    tab1, tab2, tab3, tab4 = st.tabs(["🚛 Veículos", "🏙️ Operacional/Subsetores", "📏 Quilometragem", "⏱️ Horas"])
+
     with tab1:
-        st.header("📊 Visão Geral")
-        st.write("Aqui vão os KPIs e gráficos principais da operação")
-        st.dataframe(df_filtered.head())
+        st.subheader("🚛 Análises de Veículos")
+        st.dataframe(df_filtered)
 
     with tab2:
-        st.header("🚛 Veículos")
-        st.write("Gráficos de produtividade, ranking e eficiência de veículos")
+        st.subheader("🏙️ Análises Operacionais / Subsetores")
+        st.dataframe(df_filtered)
 
     with tab3:
-        st.header("🌍 Subprefeituras / Setores")
-        st.write("Planejado vs realizado, ranking de setores, mapa (se aplicável)")
+        st.subheader("📏 Análises de Quilometragem")
+        st.dataframe(df_filtered)
 
     with tab4:
-        st.header("📏 Quilometragem")
-        st.write("KM percorrido por dia, dentro/fora do setor, totais por unidade")
-
-    with tab5:
-        st.header("⏱️ Horas")
-        st.write("Média de horas de operação, tempo de fila, variações por setor")
+        st.subheader("⏱️ Análises de Horas")
+        st.dataframe(df_filtered)
 
 else:
     st.info("Nenhum relatório foi carregado ainda.")
+
+conn.close()
