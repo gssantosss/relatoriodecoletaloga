@@ -270,8 +270,42 @@ if table_exists:
         st.dataframe(df_filtered)
 
     with tab4:
-        st.subheader("Análise de KM")
+        st.subheader("Análise de Quilometragem")
+    
+        # Garantir que as colunas estão no formato numérico
+        df_filtered["percurso_fora_do_setor"] = pd.to_numeric(df_filtered["percurso_fora_do_setor"], errors="coerce")
+        df_filtered["percurso_dentro_do_setor"] = pd.to_numeric(df_filtered["percurso_dentro_do_setor"], errors="coerce")
+    
+        # Somar os valores
+        total_fora = df_filtered["percurso_fora_do_setor"].sum()
+        total_dentro = df_filtered["percurso_dentro_do_setor"].sum()
+    
+        # Criar DataFrame para o gráfico
+        dados_pizza = pd.DataFrame({
+            "Tipo de Percurso": ["Fora do Setor", "Dentro do Setor"],
+            "Distância Total": [total_fora, total_dentro]
+        })
+    
+        # Gráfico de pizza
+        fig_pizza = px.pie(
+            dados_pizza,
+            names="Tipo de Percurso",
+            values="Distância Total",
+            title="🚗 Proporção de Percursos",
+            hole=0.3
+        )
+        fig_pizza.update_traces(
+            textinfo='label+percent',
+            hovertemplate="<b>%{label}</b><br>Distância: %{value:,} km<br>%{percent}",
+            textfont_size=14
+        )
+        fig_pizza.update_layout(showlegend=True)
+    
+        st.plotly_chart(fig_pizza, use_container_width=True)
+    
+        # Exibir a tabela filtrada
         st.dataframe(df_filtered)
+
 
     with tab5:
         st.subheader("Análise de Horas")
