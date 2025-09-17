@@ -101,7 +101,9 @@ if "data" in df_banco.columns:
     df_banco["mesano"] = df_banco["data"].dt.strftime("%m/%Y")
 
 
+# =========================
 # Granularidade
+# =========================
 granularidade = st.sidebar.radio("Filtrar por:", ["Mês/Ano", "Período de Dias"])
 
 if granularidade == "Mês/Ano":
@@ -123,16 +125,36 @@ else:
     f_mesano = None
 
 # =========================
-# Abas (fora do if/else)
+# Aplicar filtros (continua no mesmo nível)
+# =========================
+df_filtered = df_banco.copy()
+
+if f_sub:
+    df_filtered = df_filtered[df_filtered["subprefeitura"].isin(f_sub)]
+if f_unidade:
+    df_filtered = df_filtered[df_filtered["unidade"].isin(f_unidade)]
+if f_tipo:
+    df_filtered = df_filtered[df_filtered["tipo_operacao"].isin(f_tipo)]
+if f_turno:
+    df_filtered = df_filtered[df_filtered["turno"].isin(f_turno)]
+if f_mesano:
+    df_filtered = df_filtered[df_filtered["mesano"].isin(f_mesano)]
+if f_periodo and len(f_periodo) == 2:
+    start_date, end_date = f_periodo
+    df_filtered = df_filtered[(df_filtered["data"] >= pd.to_datetime(start_date)) & 
+                              (df_filtered["data"] <= pd.to_datetime(end_date))]
+
+# =========================
+# Abas (agora totalmente fora do if/else)
 # =========================
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "📊 Visão Geral","🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"
+    "📊 Visão Geral", "🗂️ Setores", "🚛 Veículos", "📐 Quilometragem", "⏱️ Horas"
 ])
 
-    with tab1:
-        st.subheader("Análise Geral")
-            st.subheader("Análise Geral")
-        
+with tab1:
+    st.subheader("Análise Geral")
+    # Coloque aqui seus KPIs e gráficos de visão geral
+
             # Garantir que as colunas numéricas estão no formato certo
             if "total_de_kms" in df_filtered.columns:
                 df_filtered["total_de_kms"] = pd.to_numeric(df_filtered["total_de_kms"], errors="coerce")
