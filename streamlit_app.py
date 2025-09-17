@@ -116,15 +116,14 @@ if table_exists:
     
     # Criar colunas auxiliares
     df_banco["mesano"] = df_banco["data"].dt.strftime("%m/%Y")
-    df_banco["mesano_dt"] = pd.to_datetime(df_banco["mesano"], format="%m/%Y", errors="coerce")
+    df_banco["mesano_dt"] = pd.to_datetime(df_banco["data"].dt.to_period("M").astype(str), format="%Y-%m")
     
     # Granularidade
     granularidade = st.sidebar.radio("Filtrar por:", ["Mês/Ano", "Período de Dias"])
     
     if granularidade == "Mês/Ano":
         # Determinar o último mês válido com base na última data real
-        ultimo_mes_valido = df_banco["data"].max()
-        ultimo_mesano_dt = pd.to_datetime(ultimo_mes_valido.strftime("%Y-%m-01"))
+        ultimo_mesano_dt = df_banco["mesano_dt"].max()
     
         # Filtrar os valores únicos de 'mesano' até o último mês válido
         mesano_validos = df_banco[df_banco["mesano_dt"] <= ultimo_mesano_dt].sort_values("mesano_dt")["mesano"].unique()
@@ -145,27 +144,7 @@ if table_exists:
             format="DD/MM/YYYY"
         )
         f_mesano = None
-    
 
-    # =========================
-    # Aplicar filtros
-    # =========================
-    df_filtered = df_banco.copy()
-
-    if f_sub:
-        df_filtered = df_filtered[df_filtered["subprefeitura"].isin(f_sub)]
-    if f_unidade:
-        df_filtered = df_filtered[df_filtered["unidade"].isin(f_unidade)]
-    if f_tipo:
-        df_filtered = df_filtered[df_filtered["tipo_operacao"].isin(f_tipo)]
-    if f_turno:
-        df_filtered = df_filtered[df_filtered["turno"].isin(f_turno)]
-    if f_mesano:
-        df_filtered = df_filtered[df_filtered["mesano"].isin(f_mesano)]
-    if f_periodo and len(f_periodo) == 2:
-        start_date, end_date = f_periodo
-        df_filtered = df_filtered[(df_filtered["data"] >= pd.to_datetime(start_date)) &
-                                  (df_filtered["data"] <= pd.to_datetime(end_date))]
 
     # =========================
     # Abas
