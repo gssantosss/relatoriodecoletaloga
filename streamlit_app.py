@@ -282,13 +282,13 @@ if table_exists:
     
         # Criar DataFrame para o gráfico
         dados_pizza = pd.DataFrame({
+            "Tipo de Percurso": ["Fora do Setor", "Dentro do Setor"],
             "Distância Total": [total_fora, total_dentro]
         })
     
         # Gráfico de pizza
         fig_pizza = px.pie(
             dados_pizza,
-            names="Tipo de Percurso",
             values="Distância Total",
             title="🚗 Proporção de Percursos",
             hole=0.6
