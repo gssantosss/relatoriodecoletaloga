@@ -112,10 +112,17 @@ if table_exists:
     # Granularidade
     granularidade = st.sidebar.radio("Filtrar por:", ["Mês/Ano", "Período de Dias"])
     if granularidade == "Mês/Ano":
+        # Garantir que 'mesano_dt' está correto e sem datas futuras
+        df_banco["mesano_dt"] = pd.to_datetime(df_banco["mesano"], format="%m/%Y", errors="coerce")
+        df_banco = df_banco[df_banco["mesano_dt"].notna()]
+        df_banco = df_banco[df_banco["mesano_dt"] <= pd.Timestamp.today()]
+        
+        # Filtro de Mês/Ano com base nos dados válidos
         f_mesano = st.sidebar.multiselect(
             "Mês/Ano",
-            df_banco.dropna(subset=["mesano_dt"]).sort_values("mesano_dt")["mesano"].unique()
+            df_banco.sort_values("mesano_dt")["mesano"].unique()
         )
+
         f_periodo = None
     else:
         # Garantir que a coluna 'data' está no formato correto e sem datas futuras
