@@ -117,7 +117,7 @@ if table_exists:
     # =========================
     # Abas
     # =========================
-    tab1, tab2, tab3, tab4 = st.tabs(["Veículos", "Setores", "Quilometragem", "Horas"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🚛 Veículos", "🗂️ Setores", "📐 Quilometragem", "⏱️ Horas"])
 
     with tab1:
         st.subheader("Análise de Veículos")
@@ -136,6 +136,6 @@ if table_exists:
         st.dataframe(df_filtered)
 
 else:
-    st.info("Nenhum relatório foi carregado ainda.")
+    st.info("Nenhum relatório foi carregado.")
 
 conn.close()
