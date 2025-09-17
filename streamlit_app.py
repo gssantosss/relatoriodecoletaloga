@@ -302,7 +302,7 @@ if table_exists:
             hovertemplate="<b>%{label}</b><br>Distância: %{value:,} km<br>%{percent}",
             textfont_size=12
         )
-        fig_pizza.update_layout(showlegend=True)
+        fig_pizza.update_layout(showlegend=Falso)
     
         st.plotly_chart(fig_pizza, use_container_width=True)
     
