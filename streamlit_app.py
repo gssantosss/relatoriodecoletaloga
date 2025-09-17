@@ -156,7 +156,7 @@ if table_exists:
             # -------------------------
             total_km = df_filtered["total_de_kms"].sum() if "total_de_kms" in df_filtered.columns else 0
             total_horas = df_filtered["horas_operacao_decimal"].sum()
-            %_realizado = int(df_filtered["%_realizado"].mean()) if "%_realizado" in df_filtered.columns else 0
+            pct_realizado = int(df_filtered["%_realizado"].mean()) if "%_realizado" in df_filtered.columns else 0
     
             # Top setor por KM
             if "subprefeitura" in df_filtered.columns and "km" in df_filtered.columns:
